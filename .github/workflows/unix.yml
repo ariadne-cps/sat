@@ -69,6 +69,17 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake --build . --parallel $NPROC --target everything
 
+    - name: Pigeonhole benchmark CLI smoke
+      if: matrix.build_type == 'Debug'
+      working-directory: ${{ runner.workspace }}/build
+      run: |
+        ./benchmarks/benchmark_sat_pigeonhole --max-holes 2 --samples 3 --warmups 0 --backend both --verbosity 1
+        ./benchmarks/benchmark_sat_pigeonhole --help
+        if ./benchmarks/benchmark_sat_pigeonhole --samples 2; then
+          echo "Expected invalid sample count to fail" >&2
+          exit 1
+        fi
+
     - name: Test C++
       if: matrix.build_type == 'Debug'
       working-directory: ${{ runner.workspace }}/build

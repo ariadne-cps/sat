@@ -61,6 +61,22 @@ The independent installed-library C++ tutorial lives under
 tests small known SAT/UNSAT pigeonhole instances on both backends and
 reports BDD allocations only for BDD.
 
+
+The pigeonhole benchmark uses the shared Ariadne logging command-line interface
+and reports comparative BDD/CDCL median timings (construction, solve, total).
+For example:
+
+```bash
+./build/benchmarks/benchmark_sat_pigeonhole --max-holes 3 --samples 5 --warmups 1 --backend both
+./build/benchmarks/benchmark_sat_pigeonhole --backend cdcl --max-holes 4 --verbosity 2
+./build/benchmarks/benchmark_sat_pigeonhole --help
+```
+
+Options include `--min-holes`, `--max-holes`, `--samples` (odd, at least 3),
+`--warmups`, `--backend` and the logging `--scheduler`, `--theme`, and
+`--verbosity` switches. Each trial has a fresh solver and validates SAT/UNSAT
+and the correctness of any returned witness. BDD nodes apply only to BDD.
+
 ## Limitations
 
 No DIMACS parser, assumptions, variable reordering or resource budgets yet.

@@ -147,3 +147,25 @@ At introduction both chains resolve to
 The check compares the declared Git revisions rather than the currently
 checked-out worktree content, so a mismatched dependency cannot be hidden
 by locally switching a nested submodule revision.
+
+### 2026-10-27 - Comparative pigeonhole benchmark with shared CLI/logging
+
+The benchmark now uses the same `LoggingCommandLineInterface`,
+`CommandLineContribution`, valued argument parsers, `LOGGING_PRINTLN`,
+and logger thread-registry initialization conventions as Ariadne Numeric.
+Its benchmark CMake target links `logging` and `LOGGING_SRC`.
+
+Parameters are `--min-holes/-m`, `--max-holes/-M`, `--samples/-n`
+(odd, 3..101), `--warmups/-w` (0..20), `--backend/-b` (both/bdd/cdcl),
+plus standard logging command-line options. Defaults exercise SAT (h,h)
+and UNSAT (h+1,h) instances for hole counts 1..3. Each case constructs
+one identical CNF and tests fresh BDD/CDCL solver instances on alternating
+sample order, with unmeasured warmups and independent median milliseconds
+for build, solve and total. The ratio median BDD total / median CDCL total
+is reported when both are selected; above one favors CDCL. Only BDD reports
+BDD nodes. Every run validates expected SAT/UNSAT and verifies SAT model
+satisfaction independently of the measured time.
+
+The Unix Debug workflow smoke-tests comparison, help and invalid sample
+rejection. No normal CTest benchmark runtime was added to sanitizer or
+coverage builds.
