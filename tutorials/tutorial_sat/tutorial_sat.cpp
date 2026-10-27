@@ -32,7 +32,9 @@
 using namespace Ariadne;
 
 int main() {
+    // CDCL is the default CNF search backend.
     SatSolver solver(2u);
+    if(solver.backend_kind()!=SatBackendKind::CDCL) { return 1; }
     solver.add_clause({SatLiteral(0u),SatLiteral(1u)});
     solver.add_clause({SatLiteral(0u,false),SatLiteral(1u)});
     SatResult first=solver.solve();
@@ -47,5 +49,12 @@ int main() {
         return 1;
     }
     std::cout << "UNSAT after adding NOT x1.\n";
+
+    // Select BDD when a canonical representation and its statistics help.
+    SatSolver symbolic(2u,SatBackendKind::BDD);
+    symbolic.add_clause({SatLiteral(0u),SatLiteral(1u)});
+    if(not symbolic.solve().is_sat()) { return 1; }
+    std::cout << "BDD backend allocated nodes: "
+              << symbolic.bdd_node_count() << "\n";
     return 0;
 }

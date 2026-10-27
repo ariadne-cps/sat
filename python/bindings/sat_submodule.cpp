@@ -51,7 +51,7 @@ void sat_submodule(pybind11::module& module) {
     pybind11::class_<SatSolver>(module,"SatSolver")
         .def(pybind11::init<SizeType,SatBackendKind>(),
              pybind11::arg("variable_count"),
-             pybind11::arg("backend")=SatBackendKind::BDD)
+             pybind11::arg("backend")=SatBackendKind::CDCL)
         .def("add_clause",&SatSolver::add_clause)
         .def("solve",&SatSolver::solve)
         .def("variable_count",&SatSolver::variable_count)

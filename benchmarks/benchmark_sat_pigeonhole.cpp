@@ -62,8 +62,9 @@ Void add_problem(SatSolver& solver, SizeType pigeons, SizeType holes) {
         }
     }
 }
-Void benchmark(SizeType pigeons, SizeType holes, Bool expected_sat) {
-    SatSolver solver(pigeons*holes);
+Void benchmark(SizeType pigeons, SizeType holes,
+               Bool expected_sat,SatBackendKind backend) {
+    SatSolver solver(pigeons*holes,backend);
     auto start=std::chrono::steady_clock::now();
     add_problem(solver,pigeons,holes);
     SatResult result=solver.solve();
@@ -72,16 +73,24 @@ Void benchmark(SizeType pigeons, SizeType holes, Bool expected_sat) {
         throw std::runtime_error("Incorrect pigeonhole result");
     }
     double ms=std::chrono::duration<double,std::milli>(finish-start).count();
-    std::cout << pigeons << "\t" << holes << "\t"
-              << (result.is_sat() ? "SAT" : "UNSAT") << "\t"
-              << solver.bdd_node_count() << "\t" << ms << "\n";
+    std::cout << (backend==SatBackendKind::BDD ? "BDD" : "CDCL") << "\t"
+              << pigeons << "\t" << holes << "\t"
+              << (result.is_sat() ? "SAT" : "UNSAT") << "\t";
+    if(backend==SatBackendKind::BDD) {
+        std::cout << solver.bdd_node_count();
+    } else {
+        std::cout << "-";
+    }
+    std::cout << "\t" << ms << "\n";
 }
 }
 int main() {
-    std::cout << "pigeons\tholes\tresult\tallocated_bdd_nodes\ttime_ms\n";
-    for(SizeType holes=1u; holes<=3u; ++holes) {
-        benchmark(holes,holes,true);
-        benchmark(holes+1u,holes,false);
+    std::cout << "backend\tpigeons\tholes\tresult\tallocated_bdd_nodes\ttime_ms\n";
+    for(SatBackendKind backend:{SatBackendKind::CDCL,SatBackendKind::BDD}) {
+        for(SizeType holes=1u; holes<=3u; ++holes) {
+            benchmark(holes,holes,true,backend);
+            benchmark(holes+1u,holes,false,backend);
+        }
     }
     return 0;
 }

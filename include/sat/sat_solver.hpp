@@ -54,13 +54,13 @@ class SatLiteral {
 using SatClause = std::vector<SatLiteral>;
 
 //! \brief Select the algorithm used by SatSolver.
-//! \details BDD remains the default to preserve existing API behavior.
+//! \details CDCL is the default search engine; BDD remains an explicit alternative.
 enum class SatBackendKind { BDD, CDCL };
 
 //! \brief Backend implementation detail, defined in the SAT source tree.
 class SatBackend;
 
-//! \brief Exact outcome of an ROBDD-backed propositional SAT query.
+//! \brief Exact SAT/UNSAT result independent of the selected backend.
 class SatResult {
   public:
     Bool is_sat() const { return _satisfiable; }
@@ -81,12 +81,12 @@ class SatResult {
 
 //! \brief Backend-selectable incremental CNF SAT solver.
 //! \details Clauses persist across solve() calls, regardless of backend.
-//! The BDD backend builds a canonical ROBDD. CDCL constructs a fresh
-//! one-shot CdclSolver at each solve() from the accumulated clauses.
+//! CDCL is the default; BDD builds a canonical ROBDD if selected explicitly.
+//! CDCL constructs a fresh one-shot CdclSolver for each solve() call.
 class SatSolver {
   public:
     explicit SatSolver(SizeType variable_count,
-                       SatBackendKind backend = SatBackendKind::BDD);
+                       SatBackendKind backend = SatBackendKind::CDCL);
     ~SatSolver();
 
     SatSolver(SatSolver const&) = delete;

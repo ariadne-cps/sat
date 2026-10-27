@@ -114,3 +114,21 @@ the `default` branch, preserving the existing invalid-selection contract
 without suppressing warnings. Added a regression exercising an invalid
 explicitly cast enum value. The BDD/CDCL dispatch and solver behavior for
 valid backend kinds remain unchanged.
+
+### 2026-10-27 - Promote CDCL to the default SAT backend
+
+Following green Unix, Windows, Sanitizers, and Coverage checks for the
+dual-backend implementation, `SatSolver(variable_count)` now selects CDCL.
+BDD remains available explicitly as `SatSolver(count,SatBackendKind::BDD)`.
+The Python constructor default matches C++; no backend is removed and the
+incremental clause and total witness contracts remain unchanged. Existing
+deterministic small-CNF reference tests continue running against CDCL by
+default; cross-backend tests continue checking independent BDD results.
+
+The pigeonhole benchmark explicitly exercises both backend kinds and prints
+BDD node counts only for the BDD run, avoiding an invalid metric on CDCL.
+C++ and Python tutorials show both default CDCL and explicit BDD selection.
+New regression tests verify that the default kind really is CDCL and that
+BDD-only statistics are rejected on the CDCL backend. The change is an
+intentional default-behavior change: users relying on the previous ROBDD
+representation or its diagnostics must select BDD explicitly.

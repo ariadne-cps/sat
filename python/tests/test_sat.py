@@ -53,3 +53,18 @@ def test_cdcl_backend_incremental_and_bdd_metric():
         if kind == SatBackendKind.CDCL:
             with pytest.raises(Exception):
                 solver.bdd_node_count()
+
+def test_cdcl_default_and_explicit_bdd():
+    default = SatSolver(2)
+    assert default.backend_kind() == SatBackendKind.CDCL
+    with pytest.raises(Exception):
+        default.bdd_node_count()
+
+    bdd = SatSolver(2, SatBackendKind.BDD)
+    assert bdd.backend_kind() == SatBackendKind.BDD
+    bdd.add_clause([SatLiteral(0), SatLiteral(1)])
+    assert bdd.solve().is_sat()
+    assert bdd.bdd_node_count() > 0
+    bdd.add_clause([SatLiteral(0, False)])
+    bdd.add_clause([SatLiteral(1, False)])
+    assert bdd.solve().is_unsat()

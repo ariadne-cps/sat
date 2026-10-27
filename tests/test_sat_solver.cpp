@@ -141,6 +141,27 @@ class TestSatSolver {
         }
     }
 
+    void test_default_cdcl_and_explicit_bdd() {
+        SatSolver current(2u);
+        ARIADNE_TEST_ASSERT(current.backend_kind()==SatBackendKind::CDCL)
+        ARIADNE_TEST_FAIL(current.bdd_node_count())
+        current.add_clause({SatLiteral(0u),SatLiteral(1u)});
+        ARIADNE_TEST_ASSERT(current.solve().is_sat())
+        ARIADNE_TEST_EQUALS(current.solve().model(),make_binary_word("01"))
+        current.add_clause({SatLiteral(0u,false)});
+        current.add_clause({SatLiteral(1u,false)});
+        ARIADNE_TEST_ASSERT(current.solve().is_unsat())
+
+        SatSolver legacy(2u,SatBackendKind::BDD);
+        ARIADNE_TEST_ASSERT(legacy.backend_kind()==SatBackendKind::BDD)
+        legacy.add_clause({SatLiteral(0u),SatLiteral(1u)});
+        ARIADNE_TEST_ASSERT(legacy.solve().is_sat())
+        ARIADNE_TEST_ASSERT(legacy.bdd_node_count()>0u)
+        legacy.add_clause({SatLiteral(0u,false)});
+        legacy.add_clause({SatLiteral(1u,false)});
+        ARIADNE_TEST_ASSERT(legacy.solve().is_unsat())
+    }
+
     void test_invalid_backend() {
         // Explicitly reject invalid enum values; also covers the default
         // branch required by -Wswitch-default under warnings-as-errors.
@@ -198,6 +219,7 @@ class TestSatSolver {
     }
 
     void test() {
+        ARIADNE_TEST_CALL(test_default_cdcl_and_explicit_bdd())
         ARIADNE_TEST_CALL(test_invalid_backend())
         ARIADNE_TEST_CALL(test_cross_backend())
         ARIADNE_TEST_CALL(test_empty_and_units())

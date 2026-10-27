@@ -6,22 +6,23 @@
 [![Sanitizers](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml)
 [![Coverage](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml)
 
-Ariadne SAT is a minimal C++20 ROBDD-backed propositional satisfiability solver.
-It translates CNF clauses to BDDs and obtains exact SAT/UNSAT answers by checking
-the false terminal. SAT assignments are recovered using only existing BDD Boolean operations.
-
-This is a correctness baseline, **not** a competitive CDCL solver. ROBDD sizes
-can grow exponentially with the fixed variable ordering.
+Ariadne SAT is a C++20 propositional satisfiability solver with interchangeable
+**CDCL (default)** and **ROBDD (optional)** backends. Both return exact SAT/UNSAT
+answers and a total witness on SAT. The CDCL backend uses the shared
+`ariadne-cps/cdcl` search engine; the BDD backend represents the full CNF
+canonically. The latter may grow exponentially depending on variable order.
 
 ## Public API
 
 - `SatLiteral(index,positive)`: zero-based variable index and optional polarity.
 - `SatClause`: vector of literals; an empty clause is false.
-- `SatSolver(number_of_variables)`: initially empty (true) CNF.
+- `SatSolver(number_of_variables,backend=SatBackendKind::CDCL)`: initially empty CNF, CDCL by default.
+- `SatBackendKind::BDD`: explicitly selects the canonical ROBDD backend.
 - `add_clause(clause)`: persistent incremental addition; validates all indices.
 - `solve()`: exact SAT/UNSAT result. SAT results carry a total `BinaryWord` model.
 - `model()`: throws `std::logic_error` for UNSAT.
-- `variable_count()`, `clause_count()`, `bdd_node_count()`: statistics.
+- `variable_count()`, `clause_count()`, `backend_kind()`: backend-independent queries.
+- `bdd_node_count()`: BDD-only diagnostic; throws for the CDCL backend.
 
 ```cpp
 #include "ariadne-sat.hpp"
@@ -34,7 +35,7 @@ SatResult result=solver.solve(); // SAT, model 01
 
 ## Dependencies
 
-Direct submodules: `ss/configuration` and `ss/bdd`. BDD supplies
+Direct submodules: `ss/configuration`, `ss/bdd`, and `ss/cdcl`. BDD supplies
 Threading, Utility, Macro, Logging and optionally Python Common transitively.
 No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical libraries.
 
@@ -50,19 +51,21 @@ ctest --test-dir sat/build --output-on-failure
 Requires CMake 3.15+ and C++20. Python bindings are enabled by default when a
 compatible Python 3.11+ development environment is available; set
 `-DBUILD_PYTHON_BINDINGS=OFF` for C++ only. The combined `pyariadne` extension
-exposes BDD and SAT types. The optional Python test suite uses pytest.
+exposes BDD, CDCL, and SAT types. The optional Python test suite uses pytest.
 
 ## Tutorials and benchmarks
 
 The independent installed-library C++ tutorial lives under
 `tutorials/tutorial_sat`, with a Python equivalent under
 `python/tutorials/tutorial_sat.py`. The `benchmark_sat_pigeonhole` executable
-tests small known SAT/UNSAT pigeonhole instances and reports BDD allocations.
+tests small known SAT/UNSAT pigeonhole instances on both backends and
+reports BDD allocations only for BDD.
 
 ## Limitations
 
-No DIMACS parser, assumptions, clause learning, variable reordering, theory
-reasoning or resource budgets yet. For design decisions and follow-up work,
+No DIMACS parser, assumptions, variable reordering or resource budgets yet.
+Clause learning is implemented in the shared CDCL backend; the BDD backend
+provides symbolic function representation instead. For design decisions and follow-up work,
 see [the design journal](doc/designs/sat_design.md).
 
 ## License
