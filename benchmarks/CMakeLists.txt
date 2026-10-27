@@ -1,0 +1,3 @@
+add_executable(benchmark_sat_pigeonhole benchmark_sat_pigeonhole.cpp)
+target_link_libraries(benchmark_sat_pigeonhole PRIVATE ariadne-sat sat)
+add_dependencies(benchmarks benchmark_sat_pigeonhole)

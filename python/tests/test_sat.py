@@ -1,0 +1,39 @@
+#!/usr/bin/python3
+
+# Copyright 2026 Luca Geretti
+# This file is part of Ariadne SAT (GPL-3.0-or-later).
+
+import pytest
+from pyariadne import SatLiteral, SatSolver
+
+def test_sat_and_incremental_unsat():
+    solver = SatSolver(2)
+    solver.add_clause([SatLiteral(0), SatLiteral(1)])
+    solver.add_clause([SatLiteral(0, False), SatLiteral(1)])
+    result = solver.solve()
+    assert result.is_sat()
+    assert result.has_model()
+    assert str(result.model()) == "01"
+    assert solver.variable_count() == 2
+    assert solver.clause_count() == 2
+
+    solver.add_clause([SatLiteral(1, False)])
+    result = solver.solve()
+    assert result.is_unsat()
+    assert not result.has_model()
+    with pytest.raises(Exception):
+        result.model()
+
+def test_empty_formula_and_empty_clause():
+    solver = SatSolver(0)
+    assert solver.solve().is_sat()
+    assert len(solver.solve().model()) == 0
+    solver.add_clause([])
+    assert solver.solve().is_unsat()
+
+def test_invalid_literal_does_not_modify_formula():
+    solver = SatSolver(1)
+    with pytest.raises(IndexError):
+        solver.add_clause([SatLiteral(0), SatLiteral(1)])
+    assert solver.clause_count() == 0
+    assert str(solver.solve().model()) == "0"

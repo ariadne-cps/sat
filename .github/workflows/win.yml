@@ -1,0 +1,90 @@
+name: Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Windows 2025 [Release]",
+            os: windows-2025,
+            build-type: "Release"
+          }
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1.13.0
+      with:
+        arch: x64
+
+    - name: Set up sccache
+      uses: mozilla-actions/sccache-action@v0.0.11
+      with:
+        version: "v0.18.0"
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install Python Test Dependencies
+      run: python -m pip install pytest
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: Configure CMake
+      working-directory: ${{runner.workspace}}/build
+      run: cmake ${{runner.workspace}}/sat -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=ON
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/build
+      run: cmake --build . --parallel --target everything
+
+    - name: Test C++
+      working-directory: ${{runner.workspace}}/build
+      run: ctest -LE python -V --timeout 30
+
+    - name: Test Python
+      working-directory: ${{runner.workspace}}/build
+      run: ctest -L python -V --timeout 30
+
+    - name: Install Ariadne SAT
+      working-directory: ${{runner.workspace}}/build
+      run: cmake --install . --prefix "${{runner.workspace}}/install"
+
+    - name: Prepare C++ SAT Tutorial
+      shell: pwsh
+      run: cmake -E copy_directory "$env:GITHUB_WORKSPACE/tutorials/tutorial_sat" "${{runner.workspace}}/tutorial_sat"
+
+    - name: Check C++ SAT Tutorial
+      shell: pwsh
+      working-directory: ${{runner.workspace}}/tutorial_sat
+      run: |
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{runner.workspace}}/install" -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        cmake --build build --parallel
+        $env:PATH = "${{runner.workspace}}\install\bin;$env:PATH"
+        & ".\build\tutorial_sat.exe"
+
+    - name: Check Python SAT Tutorial
+      shell: pwsh
+      working-directory: ${{ github.workspace }}/python/tutorials
+      run: |
+        $env:PYTHONPATH = "${{ runner.workspace }}\build\python"
+        python tutorial_sat.py
+
+    - name: Verify Uninstallation
+      working-directory: ${{runner.workspace}}/build
+      run: cmake --build . --target uninstall
