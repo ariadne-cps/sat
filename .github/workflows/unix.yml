@@ -80,6 +80,20 @@ jobs:
           exit 1
         fi
 
+    - name: N-queens benchmark CLI smoke
+      if: matrix.build_type == 'Debug'
+      working-directory: ${{ runner.workspace }}/build
+      run: |
+        ./benchmarks/benchmark_sat_nqueens --n 1 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 2 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 3 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 4 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --help
+        if ./benchmarks/benchmark_sat_nqueens --n 0; then
+          echo "Expected invalid N to fail" >&2
+          exit 1
+        fi
+
     - name: Test C++
       if: matrix.build_type == 'Debug'
       working-directory: ${{ runner.workspace }}/build

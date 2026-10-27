@@ -77,6 +77,20 @@ Options include `--min-holes`, `--max-holes`, `--samples` (odd, at least 3),
 `--verbosity` switches. Each trial has a fresh solver and validates SAT/UNSAT
 and the correctness of any returned witness. BDD nodes apply only to BDD.
 
+The `benchmark_sat_nqueens` executable compares BDD and CDCL on the
+same N-queens CNF, with board size chosen through `--n` (or `-N`):
+
+```bash
+./build/benchmarks/benchmark_sat_nqueens --n 4 --backend both --samples 5 --warmups 1
+./build/benchmarks/benchmark_sat_nqueens --n 8 --backend cdcl --samples 3
+./build/benchmarks/benchmark_sat_nqueens --help
+```
+
+It reports construction/solve/total medians and BDD/CDCL ratio, checking
+SAT/UNSAT against the N-queens theorem and independently verifying SAT
+chessboard arrangements. N=1 and N>=4 are satisfiable, N=2 and N=3 are not.
+BDD may require substantial memory for larger N.
+
 ## Limitations
 
 No DIMACS parser, assumptions, variable reordering or resource budgets yet.

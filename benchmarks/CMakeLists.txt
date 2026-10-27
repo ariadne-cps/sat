@@ -3,3 +3,9 @@ target_link_libraries(benchmark_sat_pigeonhole PRIVATE
     ariadne-sat sat logging LOGGING_SRC
 )
 add_dependencies(benchmarks benchmark_sat_pigeonhole)
+
+add_executable(benchmark_sat_nqueens benchmark_sat_nqueens.cpp)
+target_link_libraries(benchmark_sat_nqueens PRIVATE
+    ariadne-sat sat logging LOGGING_SRC
+)
+add_dependencies(benchmarks benchmark_sat_nqueens)

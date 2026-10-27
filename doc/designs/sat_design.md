@@ -169,3 +169,25 @@ satisfaction independently of the measured time.
 The Unix Debug workflow smoke-tests comparison, help and invalid sample
 rejection. No normal CTest benchmark runtime was added to sanitizer or
 coverage builds.
+
+### 2026-10-27 - Comparative N-queens benchmark
+
+Added `benchmark_sat_nqueens`, with the same Ariadne Logging CLI, logging
+output, fresh-backend samples, unmeasured warm-ups, alternating backend
+order, median construction/solve/total time measurements and BDD/CDCL
+total-time ratio as the pigeonhole comparison. `--n/-N` controls the
+chessboard size (default 4), with `--backend/-b`, `--samples/-n`,
+`--warmups/-w` and the logging options remaining available. Every
+square has a zero-based Boolean variable. Exactly-one constraints for
+each row and column are pairwise CNF, and all diagonal conflicts are
+forbidden through binary clauses. The same prebuilt clauses are supplied
+to both backends outside timed CNF generation. Every trial checks the
+mathematically known SAT statuses (1 SAT, 2/3 UNSAT, >=4 SAT), verifies
+every clause for a returned witness, and independently checks the
+non-attacking queen arrangement. All checks run outside measurement.
+For large N, the ROBDD may grow quickly; users can choose
+`--backend cdcl` to measure only the CDCL backend.
+
+The Unix Debug workflow includes CLI smoke coverage for n=1,2,3,4,
+help handling and invalid n=0; it does not substitute or weaken the
+existing SAT solver regressions.
