@@ -72,3 +72,25 @@ Ariadne copyright and GPL-3.0-or-later notice, followed by a Doxygen file
 name and brief description, matching the established SMT solver header style.
 Only leading comment banners were changed; solver, tests, tutorials and
 Python binding implementations are unchanged.
+
+### 2026-10-27 - Backend-selectable SAT solver (BDD and CDCL)
+
+Introduced the internal `SatBackend` abstraction with `BddSatBackend` and
+`CdclSatBackend`. The public `SatSolver` accepts a `SatBackendKind`
+constructor argument (BDD by default for compatibility), exposes
+`backend_kind()`, and maintains the existing clause-count, incremental
+`add_clause()`, repeated `solve()` and total `BinaryWord` model contracts.
+The BDD backend retains the original canonical ROBDD implementation and
+`bdd_node_count()`; that diagnostic throws for the CDCL backend, rather
+than presenting a fabricated metric. CDCL reconstructs a one-shot search
+from the persistent CNF at each solve. SAT deliberately retains its existing
+`SatLiteral` API, translating explicitly to the shared `BooleanLiteral`
+inside the CDCL adapter; this avoids a breaking type change or duplicate
+Python registrations.
+
+The new direct `cdcl` git submodule shares the configuration revision with
+`bdd`. The aggregated Python extension includes the CDCL binding objects,
+preventing unresolved transitive registration symbols. C++ and Python tests
+exercise both backends, repeated solve and incremental UNSAT, with 128
+deterministic generated CNFs cross-checked against one another and the
+truth-table oracle. No SMT dependency is introduced.

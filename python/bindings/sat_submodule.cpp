@@ -44,11 +44,18 @@ void sat_submodule(pybind11::module& module) {
         .def("has_model",&SatResult::has_model)
         .def("model",&SatResult::model,pybind11::return_value_policy::copy);
 
+    pybind11::enum_<SatBackendKind>(module,"SatBackendKind")
+        .value("BDD",SatBackendKind::BDD)
+        .value("CDCL",SatBackendKind::CDCL);
+
     pybind11::class_<SatSolver>(module,"SatSolver")
-        .def(pybind11::init<SizeType>(),pybind11::arg("variable_count"))
+        .def(pybind11::init<SizeType,SatBackendKind>(),
+             pybind11::arg("variable_count"),
+             pybind11::arg("backend")=SatBackendKind::BDD)
         .def("add_clause",&SatSolver::add_clause)
         .def("solve",&SatSolver::solve)
         .def("variable_count",&SatSolver::variable_count)
         .def("clause_count",&SatSolver::clause_count)
+        .def("backend_kind",&SatSolver::backend_kind)
         .def("bdd_node_count",&SatSolver::bdd_node_count);
 }

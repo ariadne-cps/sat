@@ -18,6 +18,10 @@ if(Python3_FOUND)
         )
     endif()
 
+    if(NOT TARGET pyariadne-cdcl)
+        message(FATAL_ERROR "The CDCL Python binding target is required to build pyariadne-sat.")
+    endif()
+
     add_subdirectory(bindings)
 
     if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)

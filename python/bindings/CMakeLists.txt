@@ -17,6 +17,12 @@ target_include_directories(pyariadne-sat INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<TARGET_PROPERTY:pyariadne-bdd,INTERFACE_INCLUDE_DIRECTORIES>
 )
-target_link_libraries(pyariadne-sat INTERFACE pyariadne-bdd)
+# The combined Python module registers both BDD and CDCL before SAT.
+# Include all transitively registered module objects to avoid undefined
+# module symbols at import/link time.
+target_link_libraries(pyariadne-sat INTERFACE
+    pyariadne-bdd
+    pyariadne-cdcl
+)
 
 ariadne_add_python_module(NAME sat MODULE_SOURCE sat_module.cpp)

@@ -30,6 +30,7 @@
 #include <utility>
 
 #include "sat/sat_solver.hpp"
+#include "sat_backend.hpp"
 
 namespace Ariadne {
 
@@ -43,50 +44,40 @@ BinaryWord const& SatResult::model() const {
     return _model;
 }
 
-SatSolver::SatSolver(SizeType variable_count)
+SatSolver::SatSolver(SizeType variable_count,SatBackendKind backend)
     : _variable_count(variable_count),
-      _manager(),
-      _formula(_manager.constant(true)) { }
+      _backend_kind(backend),
+      _backend(make_sat_backend(variable_count,backend)) { }
 
-Void SatSolver::add_clause(SatClause const& clause) {
-    // Validate the entire clause before changing the formula.
-    for(auto const& literal : clause) {
-        if(literal.variable() >= _variable_count) {
+SatSolver::~SatSolver() = default;
+SatSolver::SatSolver(SatSolver&&) noexcept = default;
+SatSolver& SatSolver::operator=(SatSolver&&) noexcept = default;
+
+Void SatSolver::add_clause(SatClause const& clause)
+{
+    // Validate all literals before mutating the selected backend.
+    for(SatLiteral const& literal:clause) {
+        if(literal.variable()>=_variable_count) {
             throw std::out_of_range("SAT literal variable exceeds declared variable count");
         }
     }
-
-    Robdd disjunction = _manager.constant(false);
-    for(auto const& literal : clause) {
-        Robdd variable = _manager.variable(literal.variable());
-        Robdd term = literal.positive() ? variable : _manager.negation(variable);
-        disjunction = _manager.disjunction(disjunction,term);
-    }
-    _formula = _manager.conjunction(_formula,disjunction);
+    _backend->add_clause(clause);
     ++_clause_count;
 }
 
-SatResult SatSolver::solve() {
-    if(_formula.is_false()) {
-        return SatResult(false,BinaryWord());
-    }
-
-    Robdd remaining = _formula;
+SatResult SatSolver::solve()
+{
     BinaryWord model;
-    for(SizeType index = 0u; index != _variable_count; ++index) {
-        Robdd variable = _manager.variable(index);
-        Robdd with_false = _manager.conjunction(
-            remaining,_manager.negation(variable));
-        if(not with_false.is_false()) {
-            model.append(false);
-            remaining = with_false;
-        } else {
-            // Satisfiability of remaining implies this branch is feasible.
-            remaining = _manager.conjunction(remaining,variable);
-            model.append(true);
-        }
+    Bool satisfiable=_backend->solve(model);
+    return SatResult(satisfiable,std::move(model));
+}
+
+SizeType SatSolver::bdd_node_count() const
+{
+    if(_backend_kind!=SatBackendKind::BDD) {
+        throw std::logic_error("BDD node count only available for BDD SAT backend");
     }
-    return SatResult(true,std::move(model));
+    return _backend->bdd_node_count();
 }
 
 } // namespace Ariadne

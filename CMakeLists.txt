@@ -21,6 +21,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
         CHAINS
             "configuration"
             "bdd|configuration"
+            "cdcl|configuration"
     )
 endif()
 
@@ -35,7 +36,7 @@ target_include_directories(sat INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include/ariadne-sat>
 )
-target_link_libraries(sat INTERFACE bdd)
+target_link_libraries(sat INTERFACE bdd cdcl)
 
 add_subdirectory(src)
 target_link_libraries(SAT_SRC PRIVATE sat)

@@ -4,3 +4,6 @@
 [submodule "ss/bdd"]
 	path = ss/bdd
 	url = https://github.com/ariadne-cps/bdd
+[submodule "ss/cdcl"]
+	path = ss/cdcl
+	url = https://github.com/ariadne-cps/cdcl

@@ -4,7 +4,7 @@
 # This file is part of Ariadne SAT (GPL-3.0-or-later).
 
 import pytest
-from pyariadne import SatLiteral, SatSolver
+from pyariadne import SatLiteral, SatSolver, SatBackendKind
 
 def test_sat_and_incremental_unsat():
     solver = SatSolver(2)
@@ -37,3 +37,19 @@ def test_invalid_literal_does_not_modify_formula():
         solver.add_clause([SatLiteral(0), SatLiteral(1)])
     assert solver.clause_count() == 0
     assert str(solver.solve().model()) == "0"
+
+def test_cdcl_backend_incremental_and_bdd_metric():
+    for kind in (SatBackendKind.BDD, SatBackendKind.CDCL):
+        solver = SatSolver(2, kind)
+        assert solver.backend_kind() == kind
+        solver.add_clause([SatLiteral(0), SatLiteral(1)])
+        solver.add_clause([SatLiteral(0, False), SatLiteral(1)])
+        first = solver.solve()
+        assert first.is_sat()
+        assert str(first.model()) == "01"
+        assert solver.solve().is_sat()
+        solver.add_clause([SatLiteral(1, False)])
+        assert solver.solve().is_unsat()
+        if kind == SatBackendKind.CDCL:
+            with pytest.raises(Exception):
+                solver.bdd_node_count()

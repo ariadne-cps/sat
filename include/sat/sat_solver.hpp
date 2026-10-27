@@ -30,8 +30,8 @@
 #define ARIADNE_SAT_SAT_SOLVER_HPP
 
 #include <vector>
+#include <memory>
 
-#include "bdd/robdd.hpp"
 #include "utility/binary_word.hpp"
 
 namespace Ariadne {
@@ -52,6 +52,13 @@ class SatLiteral {
 
 using SatClause = std::vector<SatLiteral>;
 
+//! \brief Select the algorithm used by SatSolver.
+//! \details BDD remains the default to preserve existing API behavior.
+enum class SatBackendKind { BDD, CDCL };
+
+//! \brief Backend implementation detail, defined in the SAT source tree.
+class SatBackend;
+
 //! \brief Exact outcome of an ROBDD-backed propositional SAT query.
 class SatResult {
   public:
@@ -71,30 +78,41 @@ class SatResult {
     friend class SatSolver;
 };
 
-//! \brief Minimal incremental CNF solver using a canonical ROBDD.
-//! \details Clauses persist across solve() calls. Variables are numbered
-//! from 0 to variable_count()-1. This is exact, but BDD size may be exponential.
+//! \brief Backend-selectable incremental CNF SAT solver.
+//! \details Clauses persist across solve() calls, regardless of backend.
+//! The BDD backend builds a canonical ROBDD. CDCL constructs a fresh
+//! one-shot CdclSolver at each solve() from the accumulated clauses.
 class SatSolver {
   public:
-    explicit SatSolver(SizeType variable_count);
+    explicit SatSolver(SizeType variable_count,
+                       SatBackendKind backend = SatBackendKind::BDD);
+    ~SatSolver();
 
-    //! \brief Add a disjunction of literals; an empty clause forces UNSAT.
-    //! \throws std::out_of_range if any literal uses an undeclared variable.
+    SatSolver(SatSolver const&) = delete;
+    SatSolver& operator=(SatSolver const&) = delete;
+    SatSolver(SatSolver&&) noexcept;
+    SatSolver& operator=(SatSolver&&) noexcept;
+
+    //! \brief Add a disjunction, with empty clause meaning contradiction.
+    //! \throws std::out_of_range without modifying state for invalid variables.
     Void add_clause(SatClause const& clause);
 
-    //! \brief Return SAT and a total witness, or UNSAT.
+    //! \brief Return SAT with a total model, or exact UNSAT.
     SatResult solve();
 
     SizeType variable_count() const { return _variable_count; }
     SizeType clause_count() const { return _clause_count; }
-    //! \brief Number of allocated BDD nodes (includes intermediate nodes).
-    SizeType bdd_node_count() const { return _manager.node_count(); }
+    SatBackendKind backend_kind() const { return _backend_kind; }
+
+    //! \brief Number of BDD nodes, including intermediate nodes.
+    //! \throws std::logic_error if the selected backend is not BDD.
+    SizeType bdd_node_count() const;
 
   private:
     SizeType _variable_count;
     SizeType _clause_count = 0u;
-    RobddManager _manager;
-    Robdd _formula;
+    SatBackendKind _backend_kind;
+    std::unique_ptr<SatBackend> _backend;
 };
 
 } // namespace Ariadne
