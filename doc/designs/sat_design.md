@@ -64,3 +64,11 @@ budgets, DIMACS ingestion, and a separate CDCL backend if workloads demand it.
   CI and pigeonhole benchmark.
 
 - 2026-10-27: Fixed the `ARIADNE_TEST_ASSERT` name collision (`result` renamed to `sat_result`) and aligned CI with the updated BDD/SMT structure: Release/Debug jobs, independent sanitizers and prefix-relative Python installation. Updated BDD gitlink to the workflow-alignment commit. CI execution remains to be verified.
+
+### 2026-10-27 - Standardize source-file comment headers
+
+Updated all C++ header and implementation file comments to use the full
+Ariadne copyright and GPL-3.0-or-later notice, followed by a Doxygen file
+name and brief description, matching the established SMT solver header style.
+Only leading comment banners were changed; solver, tests, tutorials and
+Python binding implementations are unchanged.
