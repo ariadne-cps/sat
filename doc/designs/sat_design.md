@@ -62,3 +62,5 @@ budgets, DIMACS ingestion, and a separate CDCL backend if workloads demand it.
 - 2026-10-27: Initial CNF-to-ROBDD SAT solver, exact results and total models,
   direct dependency boundary, crosscheck tests, Python bindings, tutorials,
   CI and pigeonhole benchmark.
+
+- 2026-10-27: Fixed the `ARIADNE_TEST_ASSERT` name collision (`result` renamed to `sat_result`) and aligned CI with the updated BDD/SMT structure: Release/Debug jobs, independent sanitizers and prefix-relative Python installation. Updated BDD gitlink to the workflow-alignment commit. CI execution remains to be verified.

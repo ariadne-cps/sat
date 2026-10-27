@@ -119,11 +119,11 @@ class TestSatSolver {
                 expected = expected or satisfies(clauses,model);
             }
 
-            SatResult result=solver.solve();
-            ARIADNE_TEST_ASSERT(result.is_sat()==expected)
-            if(result.is_sat()) {
-                ARIADNE_TEST_EQUALS(result.model().size(),3u)
-                ARIADNE_TEST_ASSERT(satisfies(clauses,result.model()))
+            SatResult sat_result=solver.solve();
+            ARIADNE_TEST_ASSERT(sat_result.is_sat()==expected)
+            if(sat_result.is_sat()) {
+                ARIADNE_TEST_EQUALS(sat_result.model().size(),3u)
+                ARIADNE_TEST_ASSERT(satisfies(clauses,sat_result.model()))
             }
         }
     }

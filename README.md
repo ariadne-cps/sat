@@ -3,6 +3,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Unix](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml)
 [![Windows](https://github.com/ariadne-cps/sat/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/win.yml)
+[![Sanitizers](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml)
 [![Coverage](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml)
 
 Ariadne SAT is a minimal C++20 ROBDD-backed propositional satisfiability solver.
@@ -67,3 +68,7 @@ see [the design journal](doc/designs/sat_design.md).
 ## License
 
 GNU General Public License v3.0 or later.
+
+## CI
+
+Aligned with the current BDD and SMT workflows: Release build and installed tutorial checks, Debug C++/Python tests, separate ThreadSanitizer and AddressSanitizer/UBSan, and C++ coverage. Python installation uses a prefix-relative site-packages directory.
