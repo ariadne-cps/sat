@@ -191,3 +191,23 @@ For large N, the ROBDD may grow quickly; users can choose
 The Unix Debug workflow includes CLI smoke coverage for n=1,2,3,4,
 help handling and invalid n=0; it does not substitute or weaken the
 existing SAT solver regressions.
+
+### 2026-10-27 - Align SAT Codecov metadata and adopt watched-literal CDCL
+
+Added root `.codecov.yml` matching the established Symbolic Codecov
+configuration (CI requirement, coverage precision/status rules, gcov branch
+parsing, pull-request comments and exclusion of `tests`).
+The existing Coverage workflow already matches Symbolic and remains
+unchanged: macOS uploads `coverage.info`, validates the token and fails
+on upload errors. The README now includes the Codecov badge and follows
+Symbolic's layout/build/Python/contribution sections while retaining SAT
+API and benchmark documentation. The badge reports remote Codecov status,
+which is independent of the GitHub Actions Coverage build's green status.
+
+Advanced the direct `ss/cdcl` submodule from
+`dd2af0cb07cf6abdf940734ef1dac22b15dfc6f5` to
+`e3c676f7fe02c5600fa77c271a8556cb8ae4818c`, whose four CI families
+passed. The update brings the shared two-watched-literal propagation,
+without changing SAT's backend API, existing truth-table regressions,
+benchmark CNF encodings or witness requirements. Configuration and Utility
+gitlinks remain compatible with the existing SAT dependency checks.

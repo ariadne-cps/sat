@@ -4,13 +4,23 @@
 [![Unix](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml)
 [![Windows](https://github.com/ariadne-cps/sat/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/win.yml)
 [![Sanitizers](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml)
-[![Coverage](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml)
+[![Coverage Status](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml)
+[![codecov](https://codecov.io/gh/ariadne-cps/sat/branch/main/graph/badge.svg)](https://codecov.io/gh/ariadne-cps/sat)
 
 Ariadne SAT is a C++20 propositional satisfiability solver with interchangeable
 **CDCL (default)** and **ROBDD (optional)** backends. Both return exact SAT/UNSAT
 answers and a total witness on SAT. The CDCL backend uses the shared
 `ariadne-cps/cdcl` search engine; the BDD backend represents the full CNF
 canonically. The latter may grow exponentially depending on variable order.
+
+## Layout
+
+Public headers live under `include/sat`, with umbrella header
+`include/ariadne-sat.hpp`. Implementations are under `src`, C++ regression
+tests under `tests`, comparative pigeonhole and N-queens benchmarks under
+`benchmarks`, Python bindings and tests under `python`, and standalone C++
+examples under `tutorials`. The implementation journal is
+[`doc/designs/sat_design.md`](doc/designs/sat_design.md).
 
 ## Public API
 
@@ -39,7 +49,7 @@ Direct submodules: `ss/configuration`, `ss/bdd`, and `ss/cdcl`. BDD supplies
 Threading, Utility, Macro, Logging and optionally Python Common transitively.
 No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical libraries.
 
-## Build and tests
+## Build
 
 ```bash
 git clone --recurse-submodules https://github.com/ariadne-cps/sat.git
@@ -48,10 +58,14 @@ cmake --build sat/build --parallel --target everything
 ctest --test-dir sat/build --output-on-failure
 ```
 
-Requires CMake 3.15+ and C++20. Python bindings are enabled by default when a
-compatible Python 3.11+ development environment is available; set
-`-DBUILD_PYTHON_BINDINGS=OFF` for C++ only. The combined `pyariadne` extension
-exposes BDD, CDCL, and SAT types. The optional Python test suite uses pytest.
+Requires CMake 3.15+ and C++20.
+
+## Python bindings
+
+When a compatible Python 3.11+ development environment is available, the
+standalone build produces the combined `pyariadne` extension with BDD,
+CDCL and SAT bindings. For a C++-only build, configure with
+`-DBUILD_PYTHON_BINDINGS=OFF`. Python regression tests use pytest.
 
 ## Tutorials and benchmarks
 
@@ -60,7 +74,6 @@ The independent installed-library C++ tutorial lives under
 `python/tutorials/tutorial_sat.py`. The `benchmark_sat_pigeonhole` executable
 tests small known SAT/UNSAT pigeonhole instances on both backends and
 reports BDD allocations only for BDD.
-
 
 The pigeonhole benchmark uses the shared Ariadne logging command-line interface
 and reports comparative BDD/CDCL median timings (construction, solve, total).
@@ -98,9 +111,15 @@ Clause learning is implemented in the shared CDCL backend; the BDD backend
 provides symbolic function representation instead. For design decisions and follow-up work,
 see [the design journal](doc/designs/sat_design.md).
 
+## Contribution guidelines
+
+If you would like to contribute to Ariadne SAT, please contact the developer:
+
+- Luca Geretti <luca.geretti@univr.it>
+
 ## License
 
-GNU General Public License v3.0 or later.
+Ariadne SAT is released under the GNU General Public License v3.0.
 
 ## CI
 
