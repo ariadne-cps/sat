@@ -94,3 +94,13 @@ preventing unresolved transitive registration symbols. C++ and Python tests
 exercise both backends, repeated solve and incremental UNSAT, with 128
 deterministic generated CNFs cross-checked against one another and the
 truth-table oracle. No SMT dependency is introduced.
+
+### 2026-10-27 - Restore explicit type dependencies in the public SAT header
+
+The backend extraction removed the transitive `bdd/robdd.hpp` include from
+`sat/sat_solver.hpp`. A clean macOS build showed that this also removed
+implicit definitions of `SizeType`, `Bool`, `StringType` and `StringStream`
+needed by `SatSolver` and `utility/binary_word.hpp`. SAT now includes
+`utility/typedefs.hpp` explicitly before `utility/binary_word.hpp`.
+This is a header self-containment fix, not a reintroduction of the BDD
+dependency into the public SAT API or a change to the backend semantics.

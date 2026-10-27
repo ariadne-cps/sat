@@ -32,6 +32,7 @@
 #include <vector>
 #include <memory>
 
+#include "utility/typedefs.hpp"
 #include "utility/binary_word.hpp"
 
 namespace Ariadne {
