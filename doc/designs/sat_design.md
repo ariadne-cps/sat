@@ -104,3 +104,13 @@ needed by `SatSolver` and `utility/binary_word.hpp`. SAT now includes
 `utility/typedefs.hpp` explicitly before `utility/binary_word.hpp`.
 This is a header self-containment fix, not a reintroduction of the BDD
 dependency into the public SAT API or a change to the backend semantics.
+
+### 2026-10-27 - Handle unknown SAT backend enum values explicitly
+
+The macOS warnings-as-errors configuration uses `-Wswitch-default`, which
+requires a default label even when all declared `SatBackendKind` values
+are covered. The backend factory now throws `std::invalid_argument` from
+the `default` branch, preserving the existing invalid-selection contract
+without suppressing warnings. Added a regression exercising an invalid
+explicitly cast enum value. The BDD/CDCL dispatch and solver behavior for
+valid backend kinds remain unchanged.

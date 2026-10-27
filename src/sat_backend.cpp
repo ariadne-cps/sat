@@ -148,8 +148,9 @@ std::unique_ptr<SatBackend> make_sat_backend(
             return std::make_unique<BddSatBackend>(variable_count);
         case SatBackendKind::CDCL:
             return std::make_unique<CdclSatBackend>(variable_count);
+        default:
+            throw std::invalid_argument("Invalid SAT backend kind");
     }
-    throw std::invalid_argument("Invalid SAT backend kind");
 }
 
 } // namespace Ariadne

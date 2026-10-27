@@ -141,6 +141,14 @@ class TestSatSolver {
         }
     }
 
+    void test_invalid_backend() {
+        // Explicitly reject invalid enum values; also covers the default
+        // branch required by -Wswitch-default under warnings-as-errors.
+        ARIADNE_TEST_FAIL(
+            SatSolver(1u,static_cast<SatBackendKind>(99))
+        )
+    }
+
     void test_cross_backend() {
         for(SatBackendKind backend:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
             SatSolver solver(3u,backend);
@@ -190,6 +198,7 @@ class TestSatSolver {
     }
 
     void test() {
+        ARIADNE_TEST_CALL(test_invalid_backend())
         ARIADNE_TEST_CALL(test_cross_backend())
         ARIADNE_TEST_CALL(test_empty_and_units())
         ARIADNE_TEST_CALL(test_model_and_incrementality())
