@@ -23,6 +23,11 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
             "bdd|configuration"
             "cdcl|configuration"
     )
+    require_same_dependency_commit(Utility
+        CHAINS
+            "bdd|threading|logging|utility"
+            "cdcl|utility"
+    )
 endif()
 
 setup_project()

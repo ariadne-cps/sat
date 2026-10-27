@@ -132,3 +132,18 @@ New regression tests verify that the default kind really is CDCL and that
 BDD-only statistics are rejected on the CDCL backend. The change is an
 intentional default-behavior change: users relying on the previous ROBDD
 representation or its diagnostics must select BDD explicitly.
+
+### 2026-10-27 - Enforce matching Utility revisions across SAT backends
+
+SAT now invokes `require_same_dependency_commit(Utility ...)` during
+configuration with the two transitive gitlink chains
+`bdd|threading|logging|utility` and `cdcl|utility`. This uses the
+existing shared dependency checker, which resolves nested submodule paths
+and compares their committed gitlink SHA values, failing with
+`FATAL_ERROR` if they differ. It complements the existing Configuration
+consistency check and runs before `setup_project()` and library builds.
+At introduction both chains resolve to
+`c3b31461cd3747f6c38640524d71899db0f69d4f`.
+The check compares the declared Git revisions rather than the currently
+checked-out worktree content, so a mismatched dependency cannot be hidden
+by locally switching a nested submodule revision.
