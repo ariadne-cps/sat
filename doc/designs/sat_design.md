@@ -204,7 +204,7 @@ Symbolic's layout/build/Python/contribution sections while retaining SAT
 API and benchmark documentation. The badge reports remote Codecov status,
 which is independent of the GitHub Actions Coverage build's green status.
 
-Advanced the direct `ss/cdcl` submodule from
+Advanced the direct `ss/cdc` submodule from
 `dd2af0cb07cf6abdf940734ef1dac22b15dfc6f5` to
 `e3c676f7fe02c5600fa77c271a8556cb8ae4818c`, whose four CI families
 passed. The update brings the shared two-watched-literal propagation,

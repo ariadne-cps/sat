@@ -45,7 +45,7 @@ SatResult result=solver.solve(); // SAT, model 01
 
 ## Dependencies
 
-Direct submodules: `ss/configuration`, `ss/bdd`, and `ss/cdcl`. BDD supplies
+Direct submodules: `ss/cfg`, `ss/bdd`, and `ss/cdc`. BDD supplies
 Threading, Utility, Macro, Logging and optionally Python Common transitively.
 No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical libraries.
 
