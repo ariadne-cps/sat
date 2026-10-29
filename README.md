@@ -121,6 +121,3 @@ If you would like to contribute to Ariadne SAT, please contact the developer:
 
 Ariadne SAT is released under the GNU General Public License v3.0.
 
-## CI
-
-Aligned with the current BDD and SMT workflows: Release build and installed tutorial checks, Debug C++/Python tests, separate ThreadSanitizer and AddressSanitizer/UBSan, and C++ coverage. Python installation uses a prefix-relative site-packages directory.
