@@ -1,7 +1,7 @@
 # Ariadne SAT
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Unix](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/unix.yml)
+[![macOS Status](https://github.com/ariadne-cps/sat/actions/workflows/macos.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/macos.yml)
+[![Ubuntu Status](https://github.com/ariadne-cps/sat/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/ubuntu.yml)
 [![Windows](https://github.com/ariadne-cps/sat/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/win.yml)
 [![Sanitizers](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/sanitizers.yml)
 [![Coverage Status](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/coverage.yml)
