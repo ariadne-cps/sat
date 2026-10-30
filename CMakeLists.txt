@@ -23,10 +23,10 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
             "bdd|configuration"
             "cdcl|configuration"
     )
-    require_same_dependency_commit(Utility
+    require_same_dependency_commit(Threading
         CHAINS
-            "bdd|threading|logging|utility"
-            "cdcl|utility"
+            "bdd|threading"
+            "cdcl|threading"
     )
 endif()
 
