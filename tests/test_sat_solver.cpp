@@ -27,6 +27,7 @@
  */
 
 #include <vector>
+#include <utility>
 
 #include "macro/testing.hpp"
 #include "sat/sat_solver.hpp"
@@ -170,6 +171,43 @@ class TestSatSolver {
         )
     }
 
+    void test_move_preserves_incremental_state() {
+        for(SatBackendKind backend:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
+            ARIADNE_PRINT_TEST_CASE_TITLE("Move construction and assignment for "
+                << (backend==SatBackendKind::BDD ? "BDD" : "CDCL"))
+            SatSolver source(3u,backend);
+            source.add_clause({SatLiteral(0u)});
+            source.add_clause({SatLiteral(1u,false)});
+            SatResult before_move=source.solve();
+            ARIADNE_TEST_EQUALS(before_move.model(),make_binary_word("100"))
+
+            SatSolver moved(std::move(source));
+            ARIADNE_TEST_EQUALS(moved.variable_count(),3u)
+            ARIADNE_TEST_EQUALS(moved.clause_count(),2u)
+            ARIADNE_TEST_ASSERT(moved.backend_kind()==backend)
+            ARIADNE_TEST_EQUALS(moved.solve().model(),before_move.model())
+            moved.add_clause({SatLiteral(2u)});
+            ARIADNE_TEST_EQUALS(moved.solve().model(),make_binary_word("101"))
+
+            // Assignment replaces an already populated backend of the other
+            // kind and transfers the accumulated clauses and metadata.
+            SatBackendKind other=backend==SatBackendKind::BDD
+                ? SatBackendKind::CDCL : SatBackendKind::BDD;
+            SatSolver target(1u,other);
+            target.add_clause({});
+            ARIADNE_TEST_ASSERT(target.solve().is_unsat())
+            target=std::move(moved);
+            ARIADNE_TEST_EQUALS(target.variable_count(),3u)
+            ARIADNE_TEST_EQUALS(target.clause_count(),3u)
+            ARIADNE_TEST_ASSERT(target.backend_kind()==backend)
+            ARIADNE_TEST_EQUALS(target.solve().model(),make_binary_word("101"))
+            target.add_clause({SatLiteral(0u,false)});
+            ARIADNE_TEST_EQUALS(target.clause_count(),4u)
+            ARIADNE_TEST_ASSERT(target.solve().is_unsat())
+            ARIADNE_TEST_EQUALS(before_move.model(),make_binary_word("100"))
+        }
+    }
+
     void test_cross_backend() {
         for(SatBackendKind backend:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
             SatSolver solver(3u,backend);
@@ -221,6 +259,7 @@ class TestSatSolver {
     void test() {
         ARIADNE_TEST_CALL(test_default_cdcl_and_explicit_bdd())
         ARIADNE_TEST_CALL(test_invalid_backend())
+        ARIADNE_TEST_CALL(test_move_preserves_incremental_state())
         ARIADNE_TEST_CALL(test_cross_backend())
         ARIADNE_TEST_CALL(test_empty_and_units())
         ARIADNE_TEST_CALL(test_model_and_incrementality())
