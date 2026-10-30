@@ -211,3 +211,27 @@ passed. The update brings the shared two-watched-literal propagation,
 without changing SAT's backend API, existing truth-table regressions,
 benchmark CNF encodings or witness requirements. Configuration and Utility
 gitlinks remain compatible with the existing SAT dependency checks.
+
+### 2026-10-30 - SAT coverage and backend invariants
+
+Move construction and move assignment are tested for both backends, including
+replacement of a populated backend of the other kind. The tests verify the
+transferred variable count, clause count, backend kind, total model and further
+incremental SAT-to-UNSAT transitions. Previously returned results remain valid.
+
+Separate tests exercise the internal `SatBackend` contract: BDD node counts,
+CDCL rejection of that diagnostic with `logic_error`, continued solving after
+the rejected query, and zero-variable SAT/UNSAT results for both backends.
+These use the standard Ariadne test macros, like the public solver tests.
+
+The CDCL adapter calls the concrete `CdclSolver::solve()` without a theory or
+completion callback. In the pinned CDCL implementation, only these optional
+callbacks can set `_encountered_unknown`; pure Boolean search therefore returns
+only SAT or UNSAT. Its assignment vector is sized at construction and never
+resized. A SAT outcome is produced only when `_next_unassigned_variable()` has
+found no unassigned variable. The adapter now relies on those guarantees instead
+of checking for UNKNOWN, a changed assignment size or unassigned SAT variables.
+The existing truth-table and cross-backend checks validate total SAT witnesses;
+the zero-variable test also covers the empty assignment. These assumptions must
+be reassessed if the adapter starts supplying callbacks or CDCL adds another
+source of UNKNOWN. Public validation and diagnostic errors remain intact.

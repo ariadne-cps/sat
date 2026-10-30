@@ -112,17 +112,11 @@ class CdclSatBackend final : public SatBackend {
         if(status==CdclSolveStatus::UNSAT) {
             return false;
         }
-        if(status!=CdclSolveStatus::SAT) {
-            throw std::logic_error("Pure Boolean CDCL unexpectedly returned UNKNOWN");
-        }
+        // Without a theory or completion callback, CDCL cannot produce
+        // UNKNOWN. Its SAT path returns only after assigning every variable.
+        // The assignment storage retains the constructor's variable count.
         CdclAssignment assignment=solver.assignment();
-        if(assignment.size()!=_variable_count) {
-            throw std::logic_error("CDCL returned an incomplete Boolean assignment");
-        }
         for(auto const& value:assignment) {
-            if(not value.has_value()) {
-                throw std::logic_error("CDCL returned an unassigned model variable");
-            }
             model.append(*value);
         }
         return true;
