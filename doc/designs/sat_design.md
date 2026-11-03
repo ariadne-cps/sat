@@ -235,3 +235,23 @@ The existing truth-table and cross-backend checks validate total SAT witnesses;
 the zero-variable test also covers the empty assignment. These assumptions must
 be reassessed if the adapter starts supplying callbacks or CDCL adds another
 source of UNKNOWN. Public validation and diagnostic errors remain intact.
+
+### 2026-11-03 - Migrate SAT regressions to Ariadne Testing
+
+The existing SAT regression methods are registered individually as
+`ContextFixture` cases through `ARIADNE_TESTING_ADD_TEST`, without
+artificial fixture variants. Two backend-specific methods and eight
+public solver methods preserve their original order and semantics.
+The generated 128-CNF truth-table oracle and the 128-case BDD/CDCL
+differential checks remain unchanged.
+
+All legacy Boolean assertions, equality checks, expected exception checks,
+typed exception expectations and scenario notes now use Ariadne Testing's
+context-aware macros. The standard CTest executables use `--concise`.
+The direct `testing` dependency and the BDD/CDCL gitlinks are aligned
+to the same GCC-safe compile-time fixture registration implementation.
+No solver algorithms, Python bindings, benchmarks or tutorial content
+were modified.
+
+Validation: migration macro and registration counts checked before
+commit; actual compilation, tests and sanitizers await CI confirmation.

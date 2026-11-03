@@ -1,12 +1,12 @@
 include(CTest)
 
 add_executable(test_sat_solver test_sat_solver.cpp)
-target_link_libraries(test_sat_solver PRIVATE ariadne-sat sat)
-add_test(NAME test_sat_solver COMMAND $<TARGET_FILE:test_sat_solver>)
+target_link_libraries(test_sat_solver PRIVATE ariadne-sat sat ariadne-testing)
+add_test(NAME test_sat_solver COMMAND $<TARGET_FILE:test_sat_solver> --concise)
 add_executable(test_sat_backend test_sat_backend.cpp)
 target_include_directories(test_sat_backend PRIVATE "${PROJECT_SOURCE_DIR}/src")
-target_link_libraries(test_sat_backend PRIVATE ariadne-sat sat)
-add_test(NAME test_sat_backend COMMAND $<TARGET_FILE:test_sat_backend>)
+target_link_libraries(test_sat_backend PRIVATE ariadne-sat sat ariadne-testing)
+add_test(NAME test_sat_backend COMMAND $<TARGET_FILE:test_sat_backend> --concise)
 if(WIN32)
     set_tests_properties(test_sat_solver test_sat_backend PROPERTIES
         ENVIRONMENT_MODIFICATION

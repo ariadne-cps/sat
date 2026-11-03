@@ -7,3 +7,6 @@
 [submodule "cdc"]
 	path = ss/cdc
 	url = https://github.com/ariadne-cps/cdcl
+[submodule "tst"]
+	path = ss/tst
+	url = https://github.com/ariadne-cps/testing

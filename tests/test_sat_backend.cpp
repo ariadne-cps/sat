@@ -28,47 +28,53 @@
 
 #include <stdexcept>
 
-#include "macro/testing.hpp"
+#include "ariadne-testing.hpp"
 #include "sat_backend.hpp"
 
 using namespace Ariadne;
 
 namespace {
-Void test_backend_diagnostics() {
+class TestSatBackend : public Ariadne::Testing::ContextFixture {
+  public:
+    using ContextFixture::ContextFixture;
+
+    Void test_backend_diagnostics() {
     auto bdd=make_sat_backend(1u,SatBackendKind::BDD);
-    ARIADNE_TEST_EQUALS(bdd->bdd_node_count(),0u)
+    ARIADNE_TESTING_EXPECT_EQUAL(bdd->bdd_node_count(),0u);
     bdd->add_clause({SatLiteral(0u)});
-    ARIADNE_TEST_ASSERT(bdd->bdd_node_count()>0u)
+    ARIADNE_TESTING_PROVE(bdd->bdd_node_count()>0u);
     BinaryWord bdd_model;
-    ARIADNE_TEST_ASSERT(bdd->solve(bdd_model))
-    ARIADNE_TEST_EQUALS(bdd_model,make_binary_word("1"))
+    ARIADNE_TESTING_PROVE(bdd->solve(bdd_model));
+    ARIADNE_TESTING_EXPECT_EQUAL(bdd_model,make_binary_word("1"));
 
     auto cdcl=make_sat_backend(1u,SatBackendKind::CDCL);
-    ARIADNE_TEST_THROWS(cdcl->bdd_node_count(),std::logic_error)
+    ARIADNE_TESTING_EXPECT_THROWS(std::logic_error, cdcl->bdd_node_count());
     // Rejecting an unsupported diagnostic must leave the backend usable.
     cdcl->add_clause({SatLiteral(0u,false)});
     BinaryWord cdcl_model;
-    ARIADNE_TEST_ASSERT(cdcl->solve(cdcl_model))
-    ARIADNE_TEST_EQUALS(cdcl_model,make_binary_word("0"))
+    ARIADNE_TESTING_PROVE(cdcl->solve(cdcl_model));
+    ARIADNE_TESTING_EXPECT_EQUAL(cdcl_model,make_binary_word("0"));
 }
 
 Void test_zero_variable_backend_results() {
     for(SatBackendKind kind:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
-        ARIADNE_PRINT_TEST_CASE_TITLE("Zero-variable backend "
-            << (kind==SatBackendKind::BDD ? "BDD" : "CDCL"))
+        ARIADNE_TESTING_NOTE("Zero-variable backend "
+            << (kind==SatBackendKind::BDD ? "BDD" : "CDCL"));
         auto backend=make_sat_backend(0u,kind);
         BinaryWord model;
-        ARIADNE_TEST_ASSERT(backend->solve(model))
-        ARIADNE_TEST_ASSERT(model.empty())
+        ARIADNE_TESTING_PROVE(backend->solve(model));
+        ARIADNE_TESTING_PROVE(model.empty());
         backend->add_clause({});
-        ARIADNE_TEST_ASSERT(not backend->solve(model))
-        ARIADNE_TEST_ASSERT(model.empty())
+        ARIADNE_TESTING_PROVE(not backend->solve(model));
+        ARIADNE_TESTING_PROVE(model.empty());
     }
 }
+};
 }
 
-int main() {
-    ARIADNE_TEST_CALL(test_backend_diagnostics())
-    ARIADNE_TEST_CALL(test_zero_variable_backend_results())
-    return ARIADNE_TEST_FAILURES;
+int main(int argc, char** argv) {
+    ARIADNE_TESTING_SUITE("test_sat_backend");
+    ARIADNE_TESTING_ADD_TEST(TestSatBackend, test_backend_diagnostics);
+    ARIADNE_TESTING_ADD_TEST(TestSatBackend, test_zero_variable_backend_results);
+    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
 }
