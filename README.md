@@ -12,6 +12,7 @@ Ariadne SAT is a C++20 propositional satisfiability solver with interchangeable
 answers and a total witness on SAT. The CDCL backend uses the shared
 `ariadne-cps/cdcl` search engine; the BDD backend represents the full CNF
 canonically. The latter may grow exponentially depending on variable order.
+Although independently maintained and usable, this repository is also part of the [Ariadne repository structure](https://github.com/ariadne-cps/ariadne/blob/main/doc/structure.md).
 
 ## Layout
 
@@ -45,7 +46,7 @@ SatResult result=solver.solve(); // SAT, model 01
 
 ## Dependencies
 
-Direct submodules: `ss/cfg`, `ss/bdd`, and `ss/cdc`. BDD supplies
+Direct submodules: `ss/bui`, `ss/bdd`, and `ss/cdc`. BDD supplies
 Threading, Utility, Macro, Logging and optionally Python Common transitively.
 No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical libraries.
 
