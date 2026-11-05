@@ -3,7 +3,7 @@
 # Copyright 2026 Luca Geretti
 # This file is part of Ariadne SAT (GPL-3.0-or-later).
 
-from pyariadne import SatLiteral, SatSolver, SatBackendKind
+from pyariadne_sat import SatLiteral, SatSolver, SatBackendKind
 
 def main():
     solver = SatSolver(2)  # Defaults to CDCL

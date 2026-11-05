@@ -4,7 +4,7 @@
 # This file is part of Ariadne SAT (GPL-3.0-or-later).
 
 import pytest
-from pyariadne import SatLiteral, SatSolver, SatBackendKind
+from pyariadne_sat import SatLiteral, SatSolver, SatBackendKind
 
 def test_sat_and_incremental_unsat():
     solver = SatSolver(2)

@@ -64,7 +64,7 @@ Requires CMake 3.15+ and C++20.
 ## Python bindings
 
 When a compatible Python 3.11+ development environment is available, the
-standalone build produces the combined `pyariadne` extension with BDD,
+standalone build produces the combined `pyariadne_sat` extension with BDD,
 CDCL and SAT bindings. For a C++-only build, configure with
 `-DBUILD_PYTHON_BINDINGS=OFF`. Python regression tests use pytest.
 
@@ -117,8 +117,3 @@ see [the design journal](doc/designs/sat_design.md).
 If you would like to contribute to Ariadne SAT, please contact the developer:
 
 - Luca Geretti <luca.geretti@univr.it>
-
-## License
-
-Ariadne SAT is released under the GNU General Public License v3.0.
-

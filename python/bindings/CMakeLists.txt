@@ -25,4 +25,4 @@ target_link_libraries(pyariadne-sat INTERFACE
     pyariadne-cdcl
 )
 
-ariadne_add_python_module(NAME sat MODULE_SOURCE sat_module.cpp)
+ariadne_add_python_module(NAME sat MODULE_IMPORT_NAME pyariadne_sat MODULE_SOURCE sat_module.cpp)

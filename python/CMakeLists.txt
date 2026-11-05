@@ -25,7 +25,7 @@ if(Python3_FOUND)
     add_subdirectory(bindings)
 
     if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-        ariadne_finalize_python_module(NAME sat)
+        ariadne_finalize_python_module(NAME sat MODULE_IMPORT_NAME pyariadne_sat)
 
         if(WIN32)
             set(_python_install_dir "Lib/site-packages")

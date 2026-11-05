@@ -111,18 +111,6 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake --install . --prefix ${{ runner.workspace }}/install
 
-    - name: Check Python Sat Tutorial
-      if: matrix.build_type == 'Release'
-      working-directory: ${{ github.workspace }}/python/tutorials
-      env:
-        PYTHONPATH: ${{ runner.workspace }}/install/lib/python3.13/site-packages
-        LD_LIBRARY_PATH: ${{ runner.workspace }}/install/lib
-        DYLD_LIBRARY_PATH: ${{ runner.workspace }}/install/lib
-      run: |
-        python -c "import os, pathlib, pyariadne; p=pathlib.Path(pyariadne.__file__).resolve(); root=pathlib.Path(os.environ['PYTHONPATH']).resolve(); assert p.is_relative_to(root), (p, root)"
-        python tutorial_sat.py
-
-
     - name: Prepare C++ Sat Tutorial
       if: matrix.build_type == 'Release'
       run: cmake -E copy_directory $GITHUB_WORKSPACE/tutorials/tutorial_sat ${{ runner.workspace }}/tutorial_sat
@@ -136,6 +124,18 @@ jobs:
         export LD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${LD_LIBRARY_PATH:-}
         export DYLD_LIBRARY_PATH=${{ runner.workspace }}/install/lib:${DYLD_LIBRARY_PATH:-}
         ./build/tutorial_sat
+
+
+    - name: Check Python Sat Tutorial
+      if: matrix.build_type == 'Release'
+      working-directory: ${{ github.workspace }}/python/tutorials
+      env:
+        PYTHONPATH: ${{ runner.workspace }}/install/lib/python3.13/site-packages
+        LD_LIBRARY_PATH: ${{ runner.workspace }}/install/lib
+        DYLD_LIBRARY_PATH: ${{ runner.workspace }}/install/lib
+      run: |
+        python -c "import os, pathlib, pyariadne_sat; p=pathlib.Path(pyariadne_sat.__file__).resolve(); root=pathlib.Path(os.environ['PYTHONPATH']).resolve(); assert p.is_relative_to(root), (p, root)"
+        python tutorial_sat.py
 
 
     - name: Verify Uninstallation
