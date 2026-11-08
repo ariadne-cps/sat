@@ -59,34 +59,14 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_CXX_COMPILER=${{ matrix.config.cxx }} -DCMAKE_CXX_COMPILER_LAUNCHER="$SCCACHE_LAUNCHER" -G Ninja -DWARNINGS_AS_ERRORS=ON -DPYTHON_ENFORCE_TESTS=${{ matrix.build_type == 'Debug' && 'ON' || 'OFF' }}
 
-    - name: Build
+    - name: Build SAT and Python bindings
       working-directory: ${{ runner.workspace }}/build
-      run: cmake --build . --parallel $NPROC --target everything
+      run: cmake --build . --parallel "$NPROC" --target ariadne-sat pyariadne
 
-    - name: Pigeonhole benchmark CLI smoke
+    - name: Build C++ tests (Debug only)
       if: matrix.build_type == 'Debug'
       working-directory: ${{ runner.workspace }}/build
-      run: |
-        ./benchmarks/benchmark_sat_pigeonhole --max-holes 2 --samples 3 --warmups 0 --backend both --verbosity 1
-        ./benchmarks/benchmark_sat_pigeonhole --help
-        if ./benchmarks/benchmark_sat_pigeonhole --samples 2; then
-          echo "Expected invalid sample count to fail" >&2
-          exit 1
-        fi
-
-    - name: N-queens benchmark CLI smoke
-      if: matrix.build_type == 'Debug'
-      working-directory: ${{ runner.workspace }}/build
-      run: |
-        ./benchmarks/benchmark_sat_nqueens --n 1 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 2 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 3 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 4 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --help
-        if ./benchmarks/benchmark_sat_nqueens --n 0; then
-          echo "Expected invalid N to fail" >&2
-          exit 1
-        fi
+      run: cmake --build . --parallel "$NPROC" --target tests
 
     - name: Test C++
       if: matrix.build_type == 'Debug'
@@ -98,6 +78,36 @@ jobs:
       if: matrix.build_type == 'Debug'
       working-directory: ${{ runner.workspace }}/build
       run: ctest -L python -V --output-on-failure
+
+    - name: Build Release benchmarks
+      if: matrix.build_type == 'Release'
+      working-directory: ${{ runner.workspace }}/build
+      run: cmake --build . --parallel "$NPROC" --target benchmarks
+
+    - name: Pigeonhole benchmark CLI smoke
+      if: matrix.build_type == 'Release'
+      working-directory: ${{ runner.workspace }}/build
+      run: |
+        ./benchmarks/benchmark_sat_pigeonhole --max-holes 2 --samples 3 --warmups 0 --backend both --verbosity 1
+        ./benchmarks/benchmark_sat_pigeonhole --help
+        if ./benchmarks/benchmark_sat_pigeonhole --samples 2; then
+          echo "Expected invalid sample count to fail" >&2
+          exit 1
+        fi
+
+    - name: N-queens benchmark CLI smoke
+      if: matrix.build_type == 'Release'
+      working-directory: ${{ runner.workspace }}/build
+      run: |
+        ./benchmarks/benchmark_sat_nqueens --n 1 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 2 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 3 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --n 4 --samples 3 --warmups 0 --backend both
+        ./benchmarks/benchmark_sat_nqueens --help
+        if ./benchmarks/benchmark_sat_nqueens --n 0; then
+          echo "Expected invalid N to fail" >&2
+          exit 1
+        fi
 
     - name: Install Ariadne Sat
       if: matrix.build_type == 'Release'

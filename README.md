@@ -46,7 +46,8 @@ SatResult result=solver.solve(); // SAT, model 01
 
 ## Dependencies
 
-Direct submodules: `ss/bui`, `ss/bdd`, and `ss/cdc`. BDD supplies
+Direct submodules: `ss/bui`, `ss/bdd`, `ss/cdc`, and `ss/bmk` (Benchmarking,
+used only by standalone benchmark executables). BDD supplies
 Threading, Utility, Macro, Logging and optionally Python Common transitively.
 No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical libraries.
 
@@ -55,7 +56,8 @@ No direct dependency on Foundation, Kernel, Symbolic, SMT, or numerical librarie
 ```bash
 git clone --recurse-submodules https://github.com/ariadne-cps/sat.git
 cmake -S sat -B sat/build -DCMAKE_BUILD_TYPE=Release
-cmake --build sat/build --parallel --target everything
+cmake --build sat/build --parallel --target ariadne-sat pyariadne
+cmake --build sat/build --parallel --target benchmarks
 ctest --test-dir sat/build --output-on-failure
 ```
 
@@ -76,34 +78,27 @@ The independent installed-library C++ tutorial lives under
 tests small known SAT/UNSAT pigeonhole instances on both backends and
 reports BDD allocations only for BDD.
 
-The pigeonhole benchmark uses the shared Ariadne logging command-line interface
-and reports comparative BDD/CDCL median timings (construction, solve, total).
-For example:
+Both comparative benchmarks use the shared Ariadne Benchmarking framework.
+Their CLI accepts `--backend both|bdd|cdcl`, an odd `--samples` count between 3
+and 101 (default: 5), `--warmups` (default: 0), `--summary`, and the standard
+logging/threading options. Each timed round alternates BDD/CDCL execution order
+to reduce drift. CNF construction and witness validation remain outside timing.
+A fresh solver is built for each sample. Separate phase measurements in
+nanoseconds report solver construction and clause insertion, SAT/UNSAT solving,
+and their total, along with BDD node counts and median total-time ratios.
 
 ```bash
 ./build/benchmarks/benchmark_sat_pigeonhole --max-holes 3 --samples 5 --warmups 1 --backend both
 ./build/benchmarks/benchmark_sat_pigeonhole --backend cdcl --max-holes 4 --verbosity 2
-./build/benchmarks/benchmark_sat_pigeonhole --help
-```
-
-Options include `--min-holes`, `--max-holes`, `--samples` (odd, at least 3),
-`--warmups`, `--backend` and the logging `--scheduler`, `--theme`, and
-`--verbosity` switches. Each trial has a fresh solver and validates SAT/UNSAT
-and the correctness of any returned witness. BDD nodes apply only to BDD.
-
-The `benchmark_sat_nqueens` executable compares BDD and CDCL on the
-same N-queens CNF, with board size chosen through `--n` (or `-N`):
-
-```bash
 ./build/benchmarks/benchmark_sat_nqueens --n 4 --backend both --samples 5 --warmups 1
 ./build/benchmarks/benchmark_sat_nqueens --n 8 --backend cdcl --samples 3
-./build/benchmarks/benchmark_sat_nqueens --help
 ```
 
-It reports construction/solve/total medians and BDD/CDCL ratio, checking
-SAT/UNSAT against the N-queens theorem and independently verifying SAT
-chessboard arrangements. N=1 and N>=4 are satisfiable, N=2 and N=3 are not.
-BDD may require substantial memory for larger N.
+Pigeonhole evaluates both SAT and UNSAT instances for each hole count.
+N-Queens checks SAT/UNSAT against the chessboard theorem (N=1 or N>=4 is SAT)
+and independently validates each returned SAT arrangement. BDD can consume
+substantial memory on larger cases. The CI builds benchmarks after the library
+and Python bindings in Release and runs CLI smoke checks against those binaries.
 
 ## Limitations
 

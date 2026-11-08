@@ -23,7 +23,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     # Pinned child commits guarantee their internal consistency.
     # Preserve explicit comparisons across independent dependency branches.
     require_same_dependency_commit(Build CHAINS
-        "build" "bdd|build" "cdcl|build" "testing|build")
+        "build" "bdd|build" "cdcl|build" "testing|build" "benchmarking|build")
     require_same_dependency_commit(Threading CHAINS
         "bdd|threading" "cdcl|threading")
 endif()
@@ -56,7 +56,7 @@ setup_project_library(
     LINK_LIBRARIES sat
 )
 
-setup_standalone_project_tests(
+setup_standalone_project(
     TARGET ariadne-sat
     TEST_DIRECTORY tests
     TEST_TARGET tests
