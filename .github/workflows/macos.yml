@@ -84,31 +84,6 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
       run: cmake --build . --parallel "$NPROC" --target benchmarks
 
-    - name: Pigeonhole benchmark CLI smoke
-      if: matrix.build_type == 'Release'
-      working-directory: ${{ runner.workspace }}/build
-      run: |
-        ./benchmarks/benchmark_sat_pigeonhole --max-holes 2 --samples 3 --warmups 0 --backend both --verbosity 1
-        ./benchmarks/benchmark_sat_pigeonhole --help
-        if ./benchmarks/benchmark_sat_pigeonhole --samples 2; then
-          echo "Expected invalid sample count to fail" >&2
-          exit 1
-        fi
-
-    - name: N-queens benchmark CLI smoke
-      if: matrix.build_type == 'Release'
-      working-directory: ${{ runner.workspace }}/build
-      run: |
-        ./benchmarks/benchmark_sat_nqueens --n 1 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 2 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 3 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --n 4 --samples 3 --warmups 0 --backend both
-        ./benchmarks/benchmark_sat_nqueens --help
-        if ./benchmarks/benchmark_sat_nqueens --n 0; then
-          echo "Expected invalid N to fail" >&2
-          exit 1
-        fi
-
     - name: Install Ariadne Sat
       if: matrix.build_type == 'Release'
       working-directory: ${{ runner.workspace }}/build

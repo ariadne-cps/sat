@@ -98,7 +98,7 @@ Pigeonhole evaluates both SAT and UNSAT instances for each hole count.
 N-Queens checks SAT/UNSAT against the chessboard theorem (N=1 or N>=4 is SAT)
 and independently validates each returned SAT arrangement. BDD can consume
 substantial memory on larger cases. The CI builds benchmarks after the library
-and Python bindings in Release and runs CLI smoke checks against those binaries.
+and Python bindings in Release without executing the benchmark binaries.
 
 ## Limitations
 
