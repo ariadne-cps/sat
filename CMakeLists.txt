@@ -26,8 +26,6 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
         "build" "bdd|build" "cdcl|build" "testing|build")
     require_same_dependency_commit(Threading CHAINS
         "bdd|threading" "cdcl|threading")
-    require_same_dependency_commit(Testing CHAINS
-        "testing" "bdd|testing" "cdcl|testing")
 endif()
 
 setup_project()
