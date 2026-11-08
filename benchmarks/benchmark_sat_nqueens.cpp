@@ -181,6 +181,8 @@ int main(int argc,char const* argv[]) {
     try {
         Selection selection;
         Bench::CommandLine cli;
+        ThreadManager::instance();
+        cli.add(threading_command_line_contribution());
         cli.add(CommandLineContribution(
             "sat-nqueens-benchmark",
             benchmark_parsers(selection)));
