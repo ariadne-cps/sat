@@ -6,4 +6,3 @@ if(NOT TARGET cdcl)
     ariadne_add_submodule(cdcl)
 endif()
 
-ariadne_setup_testing()
