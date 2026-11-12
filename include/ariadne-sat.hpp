@@ -22,8 +22,8 @@
  *  along with Ariadne SAT.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file ariadne-sat.hpp
- *  \brief Public umbrella header for the Ariadne SAT library.
+/** @file ariadne-sat.hpp
+ *  @brief Public umbrella header for SAT solving and backend selection.
  */
 
 #ifndef ARIADNE_SAT_HPP

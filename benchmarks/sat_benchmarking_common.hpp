@@ -2,7 +2,29 @@
  *            sat_benchmarking_common.hpp
  *
  *  Copyright  2026  Luca Geretti
+ *
  ****************************************************************************/
+
+/*
+ *  This file is part of Ariadne SAT.
+ *
+ *  Ariadne SAT is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Ariadne SAT is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Ariadne SAT. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/** @file benchmarks/sat_benchmarking_common.hpp
+ *  @brief Shared benchmark configuration, timing and comparison helpers for SAT backends.
+ */
 
 #ifndef ARIADNE_SAT_BENCHMARKING_COMMON_HPP
 #define ARIADNE_SAT_BENCHMARKING_COMMON_HPP
@@ -24,14 +46,17 @@ namespace SatBenchmark {
 using namespace Ariadne;
 namespace Bench=Ariadne::Benchmarking;
 
+/** @brief Select which SAT solving backends to benchmark. */
 enum class BackendSelection { BOTH, BDD, CDCL };
 
+/** @brief Check whether a backend is selected for a benchmark run. */
 inline bool enabled(BackendSelection selection,SatBackendKind kind) {
     return selection==BackendSelection::BOTH ||
         (selection==BackendSelection::BDD && kind==SatBackendKind::BDD) ||
         (selection==BackendSelection::CDCL && kind==SatBackendKind::CDCL);
 }
 
+/** @brief Create command-line parsers for SAT backend selection. */
 inline List<ArgumentParser> backend_parser(BackendSelection& selection) {
     List<ArgumentParser> parsers;
     parsers.append(make_valued_argument_parser(
@@ -47,6 +72,7 @@ inline List<ArgumentParser> backend_parser(BackendSelection& selection) {
     return parsers;
 }
 
+/** @brief Parse a bounded odd number of benchmark samples. */
 inline unsigned odd_sample_count(String const& text) {
     unsigned const value=Bench::parse_unsigned<unsigned>(text);
     if(value<3u || value>101u || value%2u==0u)
@@ -54,6 +80,7 @@ inline unsigned odd_sample_count(String const& text) {
     return value;
 }
 
+/** @brief Timings and BDD node count recorded for one SAT backend. */
 struct PhaseSamples {
     Bench::Samples build;
     Bench::Samples solve;
@@ -61,11 +88,13 @@ struct PhaseSamples {
     SizeType bdd_nodes=0u;
 };
 
+/** @brief Optional benchmark measurements for both supported backends. */
 struct Comparison {
     std::optional<PhaseSamples> bdd;
     std::optional<PhaseSamples> cdcl;
 };
 
+/** @brief Per-round solver state and build/solve timings. */
 struct Attempt {
     std::optional<SatSolver> solver;
     std::optional<SatResult> result;
@@ -78,6 +107,9 @@ struct Attempt {
 // backend). This retains the original alternating order and lets Runner
 // handle all warm-ups, while separate clocks report build/solve/total.
 // Input CNF creation and all correctness checks remain outside phase clocks.
+/** @brief Compare the selected SAT backends while checking expected results and satisfying assignments.
+ *  @tparam WitnessCheck Callable checking a satisfying assignment.
+ */
 template<class WitnessCheck>
 Comparison run_comparison(Bench::Runner const& runner,
                           std::string const& name,unsigned samples,
@@ -150,6 +182,7 @@ Comparison run_comparison(Bench::Runner const& runner,
     return output;
 }
 
+/** @brief Append the measured build, solve and total timing rows to a benchmark report. */
 inline void add_rows(Bench::Report& report,std::vector<std::string> dimensions,
                      Comparison const& comparison) {
     auto add_backend=[&](char const* name,PhaseSamples const& values,bool bdd) {
@@ -168,6 +201,7 @@ inline void add_rows(Bench::Report& report,std::vector<std::string> dimensions,
     if(comparison.cdcl) add_backend("CDCL",*comparison.cdcl,false);
 }
 
+/** @brief Return the ratio of median BDD and CDCL total times, when both are present. */
 inline std::optional<double> bdd_cdcl_total_ratio(Comparison const& result) {
     if(not result.bdd || not result.cdcl) return std::nullopt;
     double const bdd=Bench::summarize(result.bdd->total).median;

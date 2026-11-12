@@ -22,8 +22,8 @@
  *  along with Ariadne SAT.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file sat/sat_solver.hpp
- *  \brief Boolean literals, solver interface, and SAT results.
+/** @file sat/sat_solver.hpp
+ *  @brief Boolean literals, backend-selectable CNF solver and satisfiability results.
  */
 
 #ifndef ARIADNE_SAT_SAT_SOLVER_HPP
@@ -40,10 +40,13 @@ namespace Ariadne {
 //! \brief A Boolean literal with zero-based variable numbering.
 class SatLiteral {
   public:
+    /** @brief Construct a literal for a zero-based variable index and polarity. */
     explicit SatLiteral(SizeType variable, Bool positive=true)
         : _variable(variable), _positive(positive) { }
 
+    /** @brief Return the zero-based variable index. */
     SizeType variable() const { return _variable; }
+    /** @brief Return true for an unnegated literal. */
     Bool positive() const { return _positive; }
 
   private:
@@ -63,14 +66,18 @@ class SatBackend;
 //! \brief Exact SAT/UNSAT result independent of the selected backend.
 class SatResult {
   public:
+    /** @brief Report whether a satisfying assignment exists. */
     Bool is_sat() const { return _satisfiable; }
+    /** @brief Report whether the formula is unsatisfiable. */
     Bool is_unsat() const { return not _satisfiable; }
+    /** @brief Report whether a satisfying model is available. */
     Bool has_model() const { return _satisfiable; }
 
     //! \brief Total model in variable-index order; only valid for SAT results.
     BinaryWord const& model() const;
 
   private:
+    /** @brief Construct a solver result and its optional model. */
     SatResult(Bool satisfiable, BinaryWord model);
 
     Bool _satisfiable;
@@ -85,13 +92,19 @@ class SatResult {
 //! CDCL constructs a fresh one-shot CdclSolver for each solve() call.
 class SatSolver {
   public:
+    /** @brief Construct a solver for the specified number of variables and backend. */
     explicit SatSolver(SizeType variable_count,
                        SatBackendKind backend = SatBackendKind::CDCL);
+    /** @brief Destroy the solver and release its backend. */
     ~SatSolver();
 
+    /** @brief Copy construction is disabled because the solver uniquely owns its backend. */
     SatSolver(SatSolver const&) = delete;
+    /** @brief Copy assignment is disabled. */
     SatSolver& operator=(SatSolver const&) = delete;
+    /** @brief Move-construct a solver and transfer its backend. */
     SatSolver(SatSolver&&) noexcept;
+    /** @brief Move-assign a solver and transfer its backend. */
     SatSolver& operator=(SatSolver&&) noexcept;
 
     //! \brief Add a disjunction, with empty clause meaning contradiction.
@@ -101,8 +114,11 @@ class SatSolver {
     //! \brief Return SAT with a total model, or exact UNSAT.
     SatResult solve();
 
+    /** @brief Return the configured number of Boolean variables. */
     SizeType variable_count() const { return _variable_count; }
+    /** @brief Return the number of clauses added to the solver. */
     SizeType clause_count() const { return _clause_count; }
+    /** @brief Return the selected SAT backend. */
     SatBackendKind backend_kind() const { return _backend_kind; }
 
     //! \brief Number of BDD nodes, including intermediate nodes.

@@ -22,8 +22,8 @@
  *  along with Ariadne SAT.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*! \file sat_backend.hpp
- *  \brief Internal interface for interchangeable SAT solver backends.
+/** @file src/sat_backend.hpp
+ *  @brief Internal interface and factory for interchangeable SAT solver backends.
  */
 
 #ifndef ARIADNE_SAT_BACKEND_HPP
@@ -35,15 +35,20 @@
 
 namespace Ariadne {
 
-//! Internal boundary shared by ROBDD and CDCL SAT implementations.
+/** @brief Abstract interface implemented by the interchangeable SAT backends. */
 class SatBackend {
   public:
+    /** @brief Destroy a concrete SAT backend. */
     virtual ~SatBackend() = default;
+    /** @brief Append a CNF clause to the backend. */
     virtual Void add_clause(SatClause const& clause) = 0;
+    /** @brief Solve the current formula and write a model when satisfiable. */
     virtual Bool solve(BinaryWord& model) = 0;
+    /** @brief Return the BDD node count, when supported by the backend. */
     virtual SizeType bdd_node_count() const = 0;
 };
 
+/** @brief Construct a backend of the requested type for a given number of variables. */
 std::unique_ptr<SatBackend> make_sat_backend(
     SizeType variable_count,SatBackendKind kind);
 
