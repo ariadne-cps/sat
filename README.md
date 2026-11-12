@@ -20,8 +20,8 @@ Public headers live under `include/sat`, with umbrella header
 `include/ariadne-sat.hpp`. Implementations are under `src`, C++ regression
 tests under `tests`, comparative pigeonhole and N-queens benchmarks under
 `benchmarks`, Python bindings and tests under `python`, and standalone C++
-examples under `tutorials`. The implementation journal is
-[`doc/designs/sat_design.md`](doc/designs/sat_design.md).
+examples under `tutorial/` (C++ and Python). The implementation journal is
+[`doc/sat_design.md`](doc/sat_design.md).
 
 ## Public API
 
@@ -103,7 +103,7 @@ and Python bindings in Release without executing the benchmark binaries.
 No DIMACS parser, assumptions, variable reordering or resource budgets yet.
 Clause learning is implemented in the shared CDCL backend; the BDD backend
 provides symbolic function representation instead. For design decisions and follow-up work,
-see [the design journal](doc/designs/sat_design.md).
+see [the design journal](doc/sat_design.md).
 
 ## Contribution guidelines
 
