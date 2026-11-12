@@ -1,5 +1,5 @@
 /***************************************************************************
- *            sat/sat_solver.cpp
+ *            sat_solver.cpp
  *
  *  Copyright  2026  Luca Geretti
  *
