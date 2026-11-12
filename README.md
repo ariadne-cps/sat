@@ -70,11 +70,9 @@ standalone build produces the combined `pyariadne_sat` extension with BDD,
 CDCL and SAT bindings. For a C++-only build, configure with
 `-DBUILD_PYTHON_BINDINGS=OFF`. Python regression tests use pytest.
 
-## Tutorials and benchmarks
+## Benchmarks
 
-The independent installed-library C++ tutorial lives under
-`tutorials/tutorial_sat`, with a Python equivalent under
-`python/tutorials/tutorial_sat.py`. The `benchmark_sat_pigeonhole` executable
+The `benchmark_sat_pigeonhole` executable
 tests small known SAT/UNSAT pigeonhole instances on both backends and
 reports BDD allocations only for BDD.
 
