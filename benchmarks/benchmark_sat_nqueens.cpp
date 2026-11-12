@@ -31,99 +31,89 @@
 #include <utility>
 #include <vector>
 
+#include "sat_benchmarking_common.hpp"
 #include "threading/thread_manager.hpp"
 #include "threading/threading_command_line_interface.hpp"
-#include "sat_benchmarking_common.hpp"
 
 using namespace Ariadne;
-namespace Bench=Ariadne::Benchmarking;
+namespace Bench = Ariadne::Benchmarking;
 
 namespace {
 struct Selection {
-    unsigned n=4u;
-    unsigned samples=5u;
-    SatBenchmark::BackendSelection backend=SatBenchmark::BackendSelection::BOTH;
+    unsigned n = 4u;
+    unsigned samples = 5u;
+    SatBenchmark::BackendSelection backend = SatBenchmark::BackendSelection::BOTH;
 };
 
 List<ArgumentParser> benchmark_parsers(Selection& s) {
     List<ArgumentParser> parsers;
 
     parsers.append(make_valued_argument_parser(
-        "N","n","Chessboard size (positive, default: 4)",
-        [&s](String const& text)->VoidFunction {
-            unsigned const value=Bench::parse_unsigned<unsigned>(text);
-            if(value==0u ||
-               static_cast<SizeType>(value)>
-                   static_cast<SizeType>(std::numeric_limits<Int>::max())/
-                   static_cast<SizeType>(value))
+        "N", "n", "Chessboard size (positive, default: 4)",
+        [&s](const String& text) -> VoidFunction {
+            const unsigned value = Bench::parse_unsigned<unsigned>(text);
+            if (value == 0u ||
+                static_cast<SizeType>(value) >
+                    static_cast<SizeType>(std::numeric_limits<Int>::max()) /
+                        static_cast<SizeType>(value))
                 throw std::invalid_argument("n is zero or exceeds Boolean variable range");
-            return [&s,value] { s.n=value; };
+            return [&s, value] { s.n = value; };
         }));
 
     parsers.append(make_valued_argument_parser(
-        "n","samples","Odd sample count between 3 and 101 (default: 5)",
-        [&s](String const& text)->VoidFunction {
-            unsigned const value=SatBenchmark::odd_sample_count(text);
-            return [&s,value] { s.samples=value; };
+        "n", "samples", "Odd sample count between 3 and 101 (default: 5)",
+        [&s](const String& text) -> VoidFunction {
+            const unsigned value = SatBenchmark::odd_sample_count(text);
+            return [&s, value] { s.samples = value; };
         }));
-    for(auto const& parser:SatBenchmark::backend_parser(s.backend))
+    for (const auto& parser: SatBenchmark::backend_parser(s.backend))
         parsers.append(parser);
     return parsers;
 }
 
-SizeType square(SizeType n,SizeType row,SizeType column)
-{
-    return row*n+column;
+SizeType square(SizeType n, SizeType row, SizeType column) {
+    return row * n + column;
 }
 
 // Exactly one queen per row and per column (pairwise at-most-one).
 // All diagonally attacking square pairs are forbidden. The CNF is built
 // once per board size, outside all timed benchmark regions.
-std::vector<SatClause> make_problem(SizeType n)
-{
+std::vector<SatClause> make_problem(SizeType n) {
     std::vector<SatClause> clauses;
-    for(SizeType row=0u;row<n;++row) {
+    for (SizeType row = 0u; row < n; ++row) {
         SatClause at_least_one;
         at_least_one.reserve(n);
-        for(SizeType col=0u;col<n;++col) {
-            at_least_one.emplace_back(square(n,row,col));
-            for(SizeType other=col+1u;other<n;++other) {
-                clauses.push_back({
-                    SatLiteral(square(n,row,col),false),
-                    SatLiteral(square(n,row,other),false)
-                });
+        for (SizeType col = 0u; col < n; ++col) {
+            at_least_one.emplace_back(square(n, row, col));
+            for (SizeType other = col + 1u; other < n; ++other) {
+                clauses.push_back({SatLiteral(square(n, row, col), false),
+                                   SatLiteral(square(n, row, other), false)});
             }
         }
         clauses.push_back(std::move(at_least_one));
     }
-    for(SizeType col=0u;col<n;++col) {
+    for (SizeType col = 0u; col < n; ++col) {
         SatClause at_least_one;
         at_least_one.reserve(n);
-        for(SizeType row=0u;row<n;++row) {
-            at_least_one.emplace_back(square(n,row,col));
-            for(SizeType other=row+1u;other<n;++other) {
-                clauses.push_back({
-                    SatLiteral(square(n,row,col),false),
-                    SatLiteral(square(n,other,col),false)
-                });
+        for (SizeType row = 0u; row < n; ++row) {
+            at_least_one.emplace_back(square(n, row, col));
+            for (SizeType other = row + 1u; other < n; ++other) {
+                clauses.push_back({SatLiteral(square(n, row, col), false),
+                                   SatLiteral(square(n, other, col), false)});
             }
         }
         clauses.push_back(std::move(at_least_one));
     }
-    for(SizeType row=0u;row<n;++row) {
-        for(SizeType col=0u;col<n;++col) {
-            for(SizeType distance=1u;distance<n-row;++distance) {
-                if(distance<n-col) {
-                    clauses.push_back({
-                        SatLiteral(square(n,row,col),false),
-                        SatLiteral(square(n,row+distance,col+distance),false)
-                    });
+    for (SizeType row = 0u; row < n; ++row) {
+        for (SizeType col = 0u; col < n; ++col) {
+            for (SizeType distance = 1u; distance < n - row; ++distance) {
+                if (distance < n - col) {
+                    clauses.push_back({SatLiteral(square(n, row, col), false),
+                                       SatLiteral(square(n, row + distance, col + distance), false)});
                 }
-                if(distance<=col) {
-                    clauses.push_back({
-                        SatLiteral(square(n,row,col),false),
-                        SatLiteral(square(n,row+distance,col-distance),false)
-                    });
+                if (distance <= col) {
+                    clauses.push_back({SatLiteral(square(n, row, col), false),
+                                       SatLiteral(square(n, row + distance, col - distance), false)});
                 }
             }
         }
@@ -131,55 +121,57 @@ std::vector<SatClause> make_problem(SizeType n)
     return clauses;
 }
 
-Bool satisfies(std::vector<SatClause> const& clauses,BinaryWord const& model)
-{
-    for(SatClause const& clause:clauses) {
-        Bool satisfied=false;
-        for(SatLiteral const& literal:clause) {
-            if(model[literal.variable()]==literal.positive()) {
-                satisfied=true;
+Bool satisfies(const std::vector<SatClause>& clauses, const BinaryWord& model) {
+    for (const SatClause& clause: clauses) {
+        Bool satisfied = false;
+        for (const SatLiteral& literal: clause) {
+            if (model[literal.variable()] == literal.positive()) {
+                satisfied = true;
                 break;
             }
         }
-        if(not satisfied) return false;
+        if (not satisfied)
+            return false;
     }
     return true;
 }
 
 // Independently validate the N-queens chessboard, not just the CNF.
-Bool valid_queens(SizeType n,BinaryWord const& model)
-{
-    if(model.size()!=n*n) return false;
-    std::vector<SizeType> columns(n,0u);
-    std::vector<SizeType> queen_columns(n,n);
-    for(SizeType row=0u;row<n;++row) {
-        SizeType row_count=0u;
-        for(SizeType col=0u;col<n;++col) {
-            if(model[square(n,row,col)]) {
+Bool valid_queens(SizeType n, const BinaryWord& model) {
+    if (model.size() != n * n)
+        return false;
+    std::vector<SizeType> columns(n, 0u);
+    std::vector<SizeType> queen_columns(n, n);
+    for (SizeType row = 0u; row < n; ++row) {
+        SizeType row_count = 0u;
+        for (SizeType col = 0u; col < n; ++col) {
+            if (model[square(n, row, col)]) {
                 ++row_count;
                 ++columns[col];
-                queen_columns[row]=col;
+                queen_columns[row] = col;
             }
         }
-        if(row_count!=1u) return false;
+        if (row_count != 1u)
+            return false;
     }
-    for(SizeType col=0u;col<n;++col) {
-        if(columns[col]!=1u) return false;
+    for (SizeType col = 0u; col < n; ++col) {
+        if (columns[col] != 1u)
+            return false;
     }
-    for(SizeType row=0u;row<n;++row) {
-        for(SizeType other=row+1u;other<n;++other) {
-            SizeType first=queen_columns[row],second=queen_columns[other];
-            SizeType diff=first<second ? second-first : first-second;
-            if(diff==other-row) return false;
+    for (SizeType row = 0u; row < n; ++row) {
+        for (SizeType other = row + 1u; other < n; ++other) {
+            SizeType first = queen_columns[row], second = queen_columns[other];
+            SizeType diff = first < second ? second - first : first - second;
+            if (diff == other - row)
+                return false;
         }
     }
     return true;
 }
 
-
 } // namespace
 
-int main(int argc,char const* argv[]) {
+int main(int argc, const char* argv[]) {
     try {
         Selection selection;
         Bench::CommandLine cli;
@@ -188,40 +180,41 @@ int main(int argc,char const* argv[]) {
         cli.add(CommandLineContribution(
             "sat-nqueens-benchmark",
             benchmark_parsers(selection)));
-        if(not cli.acquire(Bench::arguments(argc,argv))) return 0;
+        if (not cli.acquire(Bench::arguments(argc, argv)))
+            return 0;
 
-        Bench::Runner runner(cli,1u);
-        Bench::Report report("SAT N-Queens BDD/CDCL (nanoseconds)",cli.summary_fields());
+        Bench::Runner runner(cli, 1u);
+        Bench::Report report("SAT N-Queens BDD/CDCL (nanoseconds)", cli.summary_fields());
         report.set_dimension_columns({
-            {"N",0u,Bench::TableAlignment::Right},
-            {"Result"},{"Variables",0u,Bench::TableAlignment::Right},
-            {"Clauses",0u,Bench::TableAlignment::Right},
-            {"Backend"},{"BDD nodes",0u,Bench::TableAlignment::Right},
+            {"N", 0u, Bench::TableAlignment::Right},
+            {"Result"},
+            {"Variables", 0u, Bench::TableAlignment::Right},
+            {"Clauses", 0u, Bench::TableAlignment::Right},
+            {"Backend"},
+            {"BDD nodes", 0u, Bench::TableAlignment::Right},
             {"Phase"}
         });
         report.set_table_options(Bench::TableOptions::ruled());
         report.set_parameter_header(
             "CNF generated outside timing; build=solver creation + clause insertion; "
             "solve=SAT/UNSAT search; total=build + solve. Warm-ups excluded.");
-        SizeType const n=selection.n;
-        std::vector<SatClause> const clauses=make_problem(n);
-        Bool const expected_sat=n==1u || n>=4u;
-        SatBenchmark::Comparison const results=SatBenchmark::run_comparison(
-            runner,"nqueens",selection.samples,n*n,clauses,expected_sat,
-            selection.backend,[&](BinaryWord const& model) {
-                return satisfies(clauses,model) && valid_queens(n,model);
+        const SizeType n = selection.n;
+        const std::vector<SatClause> clauses = make_problem(n);
+        const Bool expected_sat = n == 1u || n >= 4u;
+        const SatBenchmark::Comparison results = SatBenchmark::run_comparison(
+            runner, "nqueens", selection.samples, n * n, clauses, expected_sat,
+            selection.backend, [&](const BinaryWord& model) {
+                return satisfies(clauses, model) && valid_queens(n, model);
             });
-        SatBenchmark::add_rows(report,{
-            std::to_string(n),expected_sat?"SAT":"UNSAT",
-            std::to_string(n*n),std::to_string(clauses.size())},results);
+        SatBenchmark::add_rows(report, {std::to_string(n), expected_sat ? "SAT" : "UNSAT", std::to_string(n * n), std::to_string(clauses.size())}, results);
         report.print();
-        if(auto ratio=SatBenchmark::bdd_cdcl_total_ratio(results))
+        if (auto ratio = SatBenchmark::bdd_cdcl_total_ratio(results))
             LOGGING_PRINTLN("BDD/CDCL median total time (ratio >1 favors CDCL): "
-                           <<Bench::Table::number(*ratio)<<"x")
+                            << Bench::Table::number(*ratio) << "x")
 
         return 0;
-    } catch(std::exception const& error) {
-        LOGGING_PRINTLN("N-queens benchmark: "<<error.what())
+    } catch (const std::exception& error) {
+        LOGGING_PRINTLN("N-queens benchmark: " << error.what())
         return 1;
     }
 }

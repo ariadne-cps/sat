@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+
 #include "ariadne-sat.hpp"
 
 using namespace Ariadne;
@@ -34,26 +35,30 @@ using namespace Ariadne;
 int main() {
     // CDCL is the default CNF search backend.
     SatSolver solver(2u);
-    if(solver.backend_kind()!=SatBackendKind::CDCL) { return 1; }
-    solver.add_clause({SatLiteral(0u),SatLiteral(1u)});
-    solver.add_clause({SatLiteral(0u,false),SatLiteral(1u)});
-    SatResult first=solver.solve();
-    if(not first.is_sat() or first.model()!=make_binary_word("01")) {
+    if (solver.backend_kind() != SatBackendKind::CDCL) {
+        return 1;
+    }
+    solver.add_clause({SatLiteral(0u), SatLiteral(1u)});
+    solver.add_clause({SatLiteral(0u, false), SatLiteral(1u)});
+    SatResult first = solver.solve();
+    if (not first.is_sat() or first.model() != make_binary_word("01")) {
         std::cerr << "Unexpected SAT result or witness.\n";
         return 1;
     }
     std::cout << "SAT, model: " << first.model() << "\n";
-    solver.add_clause({SatLiteral(1u,false)});
-    if(not solver.solve().is_unsat()) {
+    solver.add_clause({SatLiteral(1u, false)});
+    if (not solver.solve().is_unsat()) {
         std::cerr << "Expected UNSAT.\n";
         return 1;
     }
     std::cout << "UNSAT after adding NOT x1.\n";
 
     // Select BDD when a canonical representation and its statistics help.
-    SatSolver symbolic(2u,SatBackendKind::BDD);
-    symbolic.add_clause({SatLiteral(0u),SatLiteral(1u)});
-    if(not symbolic.solve().is_sat()) { return 1; }
+    SatSolver symbolic(2u, SatBackendKind::BDD);
+    symbolic.add_clause({SatLiteral(0u), SatLiteral(1u)});
+    if (not symbolic.solve().is_sat()) {
+        return 1;
+    }
     std::cout << "BDD backend allocated nodes: "
               << symbolic.bdd_node_count() << "\n";
     return 0;

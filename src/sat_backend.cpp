@@ -44,43 +44,41 @@ class BddSatBackend final : public SatBackend {
     explicit BddSatBackend(SizeType count)
         : _variable_count(count),
           _manager(),
-          _formula(_manager.constant(true)) { }
+          _formula(_manager.constant(true)) {}
 
-    Void add_clause(SatClause const& clause) override
-    {
-        Robdd disjunction=_manager.constant(false);
-        for(SatLiteral const& literal:clause) {
-            Robdd variable=_manager.variable(literal.variable());
-            Robdd term=literal.positive()
-                ? variable : _manager.negation(variable);
-            disjunction=_manager.disjunction(disjunction,term);
+    Void add_clause(const SatClause& clause) override {
+        Robdd disjunction = _manager.constant(false);
+        for (const SatLiteral& literal: clause) {
+            Robdd variable = _manager.variable(literal.variable());
+            Robdd term = literal.positive()
+                           ? variable
+                           : _manager.negation(variable);
+            disjunction = _manager.disjunction(disjunction, term);
         }
-        _formula=_manager.conjunction(_formula,disjunction);
+        _formula = _manager.conjunction(_formula, disjunction);
     }
 
-    Bool solve(BinaryWord& model) override
-    {
-        if(_formula.is_false()) {
+    Bool solve(BinaryWord& model) override {
+        if (_formula.is_false()) {
             return false;
         }
-        Robdd remaining=_formula;
-        for(SizeType index=0u;index!=_variable_count;++index) {
-            Robdd variable=_manager.variable(index);
-            Robdd with_false=_manager.conjunction(
-                remaining,_manager.negation(variable));
-            if(not with_false.is_false()) {
+        Robdd remaining = _formula;
+        for (SizeType index = 0u; index != _variable_count; ++index) {
+            Robdd variable = _manager.variable(index);
+            Robdd with_false = _manager.conjunction(
+                remaining, _manager.negation(variable));
+            if (not with_false.is_false()) {
                 model.append(false);
-                remaining=with_false;
+                remaining = with_false;
             } else {
-                remaining=_manager.conjunction(remaining,variable);
+                remaining = _manager.conjunction(remaining, variable);
                 model.append(true);
             }
         }
         return true;
     }
 
-    SizeType bdd_node_count() const override
-    {
+    SizeType bdd_node_count() const override {
         return _manager.node_count();
     }
 
@@ -93,37 +91,34 @@ class BddSatBackend final : public SatBackend {
 //! Accumulates CNF clauses; each solve uses a fresh single-shot CDCL search.
 class CdclSatBackend final : public SatBackend {
   public:
-    explicit CdclSatBackend(SizeType count) : _variable_count(count) { }
+    explicit CdclSatBackend(SizeType count) : _variable_count(count) {}
 
-    Void add_clause(SatClause const& clause) override
-    {
+    Void add_clause(const SatClause& clause) override {
         BooleanClause converted;
         converted.reserve(clause.size());
-        for(SatLiteral const& literal:clause) {
-            converted.emplace_back(literal.variable(),literal.positive());
+        for (const SatLiteral& literal: clause) {
+            converted.emplace_back(literal.variable(), literal.positive());
         }
         _clauses.push_back(std::move(converted));
     }
 
-    Bool solve(BinaryWord& model) override
-    {
-        CdclSolver solver(_variable_count,_clauses);
-        CdclSolveStatus status=solver.solve();
-        if(status==CdclSolveStatus::UNSAT) {
+    Bool solve(BinaryWord& model) override {
+        CdclSolver solver(_variable_count, _clauses);
+        CdclSolveStatus status = solver.solve();
+        if (status == CdclSolveStatus::UNSAT) {
             return false;
         }
         // Without a theory or completion callback, CDCL cannot produce
         // UNKNOWN. Its SAT path returns only after assigning every variable.
         // The assignment storage retains the constructor's variable count.
-        CdclAssignment assignment=solver.assignment();
-        for(auto const& value:assignment) {
+        CdclAssignment assignment = solver.assignment();
+        for (const auto& value: assignment) {
             model.append(*value);
         }
         return true;
     }
 
-    SizeType bdd_node_count() const override
-    {
+    SizeType bdd_node_count() const override {
         throw std::logic_error("BDD node count unavailable for CDCL SAT backend");
     }
 
@@ -135,9 +130,8 @@ class CdclSatBackend final : public SatBackend {
 } // namespace
 
 std::unique_ptr<SatBackend> make_sat_backend(
-    SizeType variable_count,SatBackendKind kind)
-{
-    switch(kind) {
+    SizeType variable_count, SatBackendKind kind) {
+    switch (kind) {
         case SatBackendKind::BDD:
             return std::make_unique<BddSatBackend>(variable_count);
         case SatBackendKind::CDCL:

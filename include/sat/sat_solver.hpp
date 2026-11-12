@@ -29,11 +29,11 @@
 #ifndef ARIADNE_SAT_SAT_SOLVER_HPP
 #define ARIADNE_SAT_SAT_SOLVER_HPP
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "utility/typedefs.hpp"
 #include "utility/binary_word.hpp"
+#include "utility/typedefs.hpp"
 
 namespace Ariadne {
 
@@ -41,8 +41,8 @@ namespace Ariadne {
 class SatLiteral {
   public:
     /** @brief Construct a literal for a zero-based variable index and polarity. */
-    explicit SatLiteral(SizeType variable, Bool positive=true)
-        : _variable(variable), _positive(positive) { }
+    explicit SatLiteral(SizeType variable, Bool positive = true)
+        : _variable(variable), _positive(positive) {}
 
     /** @brief Return the zero-based variable index. */
     SizeType variable() const { return _variable; }
@@ -58,7 +58,8 @@ using SatClause = std::vector<SatLiteral>;
 
 //! \brief Select the algorithm used by SatSolver.
 //! \details CDCL is the default search engine; BDD remains an explicit alternative.
-enum class SatBackendKind { BDD, CDCL };
+enum class SatBackendKind { BDD,
+                            CDCL };
 
 //! \brief Backend implementation detail, defined in the SAT source tree.
 class SatBackend;
@@ -74,7 +75,7 @@ class SatResult {
     Bool has_model() const { return _satisfiable; }
 
     //! \brief Total model in variable-index order; only valid for SAT results.
-    BinaryWord const& model() const;
+    const BinaryWord& model() const;
 
   private:
     /** @brief Construct a solver result and its optional model. */
@@ -99,9 +100,9 @@ class SatSolver {
     ~SatSolver();
 
     /** @brief Copy construction is disabled because the solver uniquely owns its backend. */
-    SatSolver(SatSolver const&) = delete;
+    SatSolver(const SatSolver&) = delete;
     /** @brief Copy assignment is disabled. */
-    SatSolver& operator=(SatSolver const&) = delete;
+    SatSolver& operator=(const SatSolver&) = delete;
     /** @brief Move-construct a solver and transfer its backend. */
     SatSolver(SatSolver&&) noexcept;
     /** @brief Move-assign a solver and transfer its backend. */
@@ -109,7 +110,7 @@ class SatSolver {
 
     //! \brief Add a disjunction, with empty clause meaning contradiction.
     //! \throws std::out_of_range without modifying state for invalid variables.
-    Void add_clause(SatClause const& clause);
+    Void add_clause(const SatClause& clause);
 
     //! \brief Return SAT with a total model, or exact UNSAT.
     SatResult solve();

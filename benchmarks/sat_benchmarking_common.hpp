@@ -29,9 +29,6 @@
 #ifndef ARIADNE_SAT_BENCHMARKING_COMMON_HPP
 #define ARIADNE_SAT_BENCHMARKING_COMMON_HPP
 
-#include "ariadne-benchmarking.hpp"
-#include "sat/sat_solver.hpp"
-
 #include <array>
 #include <cmath>
 #include <limits>
@@ -41,41 +38,51 @@
 #include <utility>
 #include <vector>
 
+#include "sat/sat_solver.hpp"
+
+#include "ariadne-benchmarking.hpp"
+
 namespace SatBenchmark {
 
 using namespace Ariadne;
-namespace Bench=Ariadne::Benchmarking;
+namespace Bench = Ariadne::Benchmarking;
 
 /** @brief Select which SAT solving backends to benchmark. */
-enum class BackendSelection { BOTH, BDD, CDCL };
+enum class BackendSelection { BOTH,
+                              BDD,
+                              CDCL };
 
 /** @brief Check whether a backend is selected for a benchmark run. */
-inline bool enabled(BackendSelection selection,SatBackendKind kind) {
-    return selection==BackendSelection::BOTH ||
-        (selection==BackendSelection::BDD && kind==SatBackendKind::BDD) ||
-        (selection==BackendSelection::CDCL && kind==SatBackendKind::CDCL);
+inline bool enabled(BackendSelection selection, SatBackendKind kind) {
+    return selection == BackendSelection::BOTH ||
+           (selection == BackendSelection::BDD && kind == SatBackendKind::BDD) ||
+           (selection == BackendSelection::CDCL && kind == SatBackendKind::CDCL);
 }
 
 /** @brief Create command-line parsers for SAT backend selection. */
 inline List<ArgumentParser> backend_parser(BackendSelection& selection) {
     List<ArgumentParser> parsers;
     parsers.append(make_valued_argument_parser(
-        "b","backend","Backend selection [ both | bdd | cdcl ]",
-        [&selection](String const& text)->VoidFunction {
+        "b", "backend", "Backend selection [ both | bdd | cdcl ]",
+        [&selection](const String& text) -> VoidFunction {
             BackendSelection value;
-            if(text=="both") value=BackendSelection::BOTH;
-            else if(text=="bdd") value=BackendSelection::BDD;
-            else if(text=="cdcl") value=BackendSelection::CDCL;
-            else throw std::invalid_argument("backend must be both, bdd or cdcl");
-            return [&selection,value] { selection=value; };
+            if (text == "both")
+                value = BackendSelection::BOTH;
+            else if (text == "bdd")
+                value = BackendSelection::BDD;
+            else if (text == "cdcl")
+                value = BackendSelection::CDCL;
+            else
+                throw std::invalid_argument("backend must be both, bdd or cdcl");
+            return [&selection, value] { selection = value; };
         }));
     return parsers;
 }
 
 /** @brief Parse a bounded odd number of benchmark samples. */
-inline unsigned odd_sample_count(String const& text) {
-    unsigned const value=Bench::parse_unsigned<unsigned>(text);
-    if(value<3u || value>101u || value%2u==0u)
+inline unsigned odd_sample_count(const String& text) {
+    const unsigned value = Bench::parse_unsigned<unsigned>(text);
+    if (value < 3u || value > 101u || value % 2u == 0u)
         throw std::invalid_argument("samples must be odd, between 3 and 101");
     return value;
 }
@@ -85,7 +92,7 @@ struct PhaseSamples {
     Bench::Samples build;
     Bench::Samples solve;
     Bench::Samples total;
-    SizeType bdd_nodes=0u;
+    SizeType bdd_nodes = 0u;
 };
 
 /** @brief Optional benchmark measurements for both supported backends. */
@@ -98,9 +105,9 @@ struct Comparison {
 struct Attempt {
     std::optional<SatSolver> solver;
     std::optional<SatResult> result;
-    double build_ns=0.0;
-    double solve_ns=0.0;
-    double total_ns=0.0;
+    double build_ns = 0.0;
+    double solve_ns = 0.0;
+    double total_ns = 0.0;
 };
 
 // Each Runner round is a pair of backend executions (or just the selected
@@ -111,46 +118,43 @@ struct Attempt {
  *  @tparam WitnessCheck Callable checking a satisfying assignment.
  */
 template<class WitnessCheck>
-Comparison run_comparison(Bench::Runner const& runner,
-                          std::string const& name,unsigned samples,
-                          SizeType variables,std::vector<SatClause> const& clauses,
-                          Bool expected_sat,BackendSelection selection,
+Comparison run_comparison(const Bench::Runner& runner,
+                          const std::string& name, unsigned samples,
+                          SizeType variables, const std::vector<SatClause>& clauses,
+                          Bool expected_sat, BackendSelection selection,
                           WitnessCheck&& witness_check) {
     Comparison output;
-    if(enabled(selection,SatBackendKind::BDD)) output.bdd.emplace();
-    if(enabled(selection,SatBackendKind::CDCL)) output.cdcl.emplace();
+    if (enabled(selection, SatBackendKind::BDD))
+        output.bdd.emplace();
+    if (enabled(selection, SatBackendKind::CDCL))
+        output.cdcl.emplace();
 
-    std::array<Attempt,2> attempts;
-    unsigned round=0u;
-    Bench::Samples const completed=runner.run(name,samples,
-        [&] {
+    std::array<Attempt, 2> attempts;
+    unsigned round = 0u;
+    const Bench::Samples completed = runner.run(name, samples, [&] {
             for(auto& attempt:attempts) {
                 attempt.result.reset();
                 attempt.solver.reset();
-            }
-        },
-        [&] {
-            std::array<SatBackendKind,2> const order=round%2u==0u
+            } }, [&] {
+             const std::array<SatBackendKind,2>  order=round%2u==0u
                 ? std::array<SatBackendKind,2>{SatBackendKind::BDD,SatBackendKind::CDCL}
                 : std::array<SatBackendKind,2>{SatBackendKind::CDCL,SatBackendKind::BDD};
             for(SatBackendKind kind:order) {
                 if(not enabled(selection,kind)) continue;
                 Attempt& attempt=attempts[kind==SatBackendKind::BDD ? 0u : 1u];
-                auto const start=Bench::Clock::now();
+                 const auto  start=Bench::Clock::now();
                 attempt.solver.emplace(variables,kind);
-                for(auto const& clause:clauses) attempt.solver->add_clause(clause);
-                auto const built=Bench::Clock::now();
+                for( const auto & clause:clauses) attempt.solver->add_clause(clause);
+                 const auto  built=Bench::Clock::now();
                 attempt.result.emplace(attempt.solver->solve());
-                auto const finished=Bench::Clock::now();
+                 const auto  finished=Bench::Clock::now();
                 attempt.build_ns=Bench::elapsed_ns(start,built);
                 attempt.solve_ns=Bench::elapsed_ns(built,finished);
                 attempt.total_ns=Bench::elapsed_ns(start,finished);
-            }
-        },
-        [&] {
+            } }, [&] {
             for(SatBackendKind kind:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
                 if(not enabled(selection,kind)) continue;
-                Attempt const& attempt=attempts[kind==SatBackendKind::BDD ? 0u : 1u];
+                 const Attempt & attempt=attempts[kind==SatBackendKind::BDD ? 0u : 1u];
                 if(not attempt.solver || not attempt.result)
                     throw std::runtime_error("Missing SAT benchmark result");
                 if(attempt.result->is_sat()!=expected_sat)
@@ -161,7 +165,7 @@ Comparison run_comparison(Bench::Runner const& runner,
                     throw std::runtime_error("SAT benchmark returned invalid witness");
                 if(attempt.solver->clause_count()!=clauses.size())
                     throw std::runtime_error("SAT backend modified input clause count");
-                SizeType const nodes=kind==SatBackendKind::BDD
+                 const SizeType  nodes=kind==SatBackendKind::BDD
                     ? attempt.solver->bdd_node_count() : 0u;
                 if(round>=runner.warmups()) {
                     PhaseSamples& values=kind==SatBackendKind::BDD
@@ -172,43 +176,45 @@ Comparison run_comparison(Bench::Runner const& runner,
                     values.bdd_nodes=nodes;
                 }
             }
-            ++round;
-        });
+            ++round; });
 
-    if(completed.size()!=samples ||
-       (output.bdd && output.bdd->total.size()!=samples) ||
-       (output.cdcl && output.cdcl->total.size()!=samples))
+    if (completed.size() != samples ||
+        (output.bdd && output.bdd->total.size() != samples) ||
+        (output.cdcl && output.cdcl->total.size() != samples))
         throw std::runtime_error("Incorrect SAT benchmark sample count");
     return output;
 }
 
 /** @brief Append the measured build, solve and total timing rows to a benchmark report. */
-inline void add_rows(Bench::Report& report,std::vector<std::string> dimensions,
-                     Comparison const& comparison) {
-    auto add_backend=[&](char const* name,PhaseSamples const& values,bool bdd) {
-        auto base=dimensions;
+inline void add_rows(Bench::Report& report, std::vector<std::string> dimensions,
+                     const Comparison& comparison) {
+    auto add_backend = [&](const char* name, const PhaseSamples& values, bool bdd) {
+        auto base = dimensions;
         base.push_back(name);
         base.push_back(bdd ? std::to_string(values.bdd_nodes) : "-");
-        for(auto const& phase:std::array<std::pair<char const*,Bench::Samples const*>,3>{{
-            {"build",&values.build},{"solve",&values.solve},{"total",&values.total}
-        }}) {
-            auto row=base;
+        for (const auto& phase: std::array<std::pair<const char*, const Bench::Samples*>, 3>{
+                 {{"build", &values.build}, {"solve", &values.solve}, {"total", &values.total}}
+        }) {
+            auto row = base;
             row.push_back(phase.first);
-            report.add_row(std::move(row),Bench::summarize(*phase.second));
+            report.add_row(std::move(row), Bench::summarize(*phase.second));
         }
     };
-    if(comparison.bdd) add_backend("BDD",*comparison.bdd,true);
-    if(comparison.cdcl) add_backend("CDCL",*comparison.cdcl,false);
+    if (comparison.bdd)
+        add_backend("BDD", *comparison.bdd, true);
+    if (comparison.cdcl)
+        add_backend("CDCL", *comparison.cdcl, false);
 }
 
 /** @brief Return the ratio of median BDD and CDCL total times, when both are present. */
-inline std::optional<double> bdd_cdcl_total_ratio(Comparison const& result) {
-    if(not result.bdd || not result.cdcl) return std::nullopt;
-    double const bdd=Bench::summarize(result.bdd->total).median;
-    double const cdcl=Bench::summarize(result.cdcl->total).median;
-    if(not std::isfinite(bdd) || not std::isfinite(cdcl) || cdcl<=0.0)
+inline std::optional<double> bdd_cdcl_total_ratio(const Comparison& result) {
+    if (not result.bdd || not result.cdcl)
+        return std::nullopt;
+    const double bdd = Bench::summarize(result.bdd->total).median;
+    const double cdcl = Bench::summarize(result.cdcl->total).median;
+    if (not std::isfinite(bdd) || not std::isfinite(cdcl) || cdcl <= 0.0)
         throw std::runtime_error("Invalid SAT comparative timing");
-    return bdd/cdcl;
+    return bdd / cdcl;
 }
 
 } // namespace SatBenchmark

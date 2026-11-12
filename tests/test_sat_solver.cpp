@@ -26,28 +26,29 @@
  *  \brief Regression tests for the propositional SAT solver.
  */
 
-#include <vector>
 #include <utility>
+#include <vector>
+
+#include "sat/sat_solver.hpp"
 
 #include "ariadne-testing.hpp"
-#include "sat/sat_solver.hpp"
 
 using namespace Ariadne;
 
 namespace {
 
-Bool satisfies(SatClause const& clause, BinaryWord const& model) {
-    for(auto const& literal : clause) {
-        if(model[literal.variable()] == literal.positive()) {
+Bool satisfies(const SatClause& clause, const BinaryWord& model) {
+    for (const auto& literal: clause) {
+        if (model[literal.variable()] == literal.positive()) {
             return true;
         }
     }
     return false;
 }
 
-Bool satisfies(std::vector<SatClause> const& clauses, BinaryWord const& model) {
-    for(auto const& clause : clauses) {
-        if(not satisfies(clause,model)) {
+Bool satisfies(const std::vector<SatClause>& clauses, const BinaryWord& model) {
+    for (const auto& clause: clauses) {
+        if (not satisfies(clause, model)) {
             return false;
         }
     }
@@ -59,8 +60,8 @@ class TestSatSolver : public Ariadne::Testing::ContextFixture {
     using ContextFixture::ContextFixture;
     void test_empty_and_units() {
         SatSolver empty(0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(empty.variable_count(),0u);
-        ARIADNE_TESTING_EXPECT_EQUAL(empty.clause_count(),0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(empty.variable_count(), 0u);
+        ARIADNE_TESTING_EXPECT_EQUAL(empty.clause_count(), 0u);
         ARIADNE_TESTING_PROVE(empty.solve().is_sat());
         ARIADNE_TESTING_PROVE(empty.solve().model().empty());
 
@@ -72,95 +73,97 @@ class TestSatSolver : public Ariadne::Testing::ContextFixture {
         SatSolver positive(1u);
         positive.add_clause({SatLiteral(0u)});
         ARIADNE_TESTING_PROVE(positive.solve().is_sat());
-        ARIADNE_TESTING_EXPECT_EQUAL(positive.solve().model(),make_binary_word("1"));
+        ARIADNE_TESTING_EXPECT_EQUAL(positive.solve().model(), make_binary_word("1"));
 
         SatSolver negative(1u);
-        negative.add_clause({SatLiteral(0u,false)});
-        ARIADNE_TESTING_EXPECT_EQUAL(negative.solve().model(),make_binary_word("0"));
+        negative.add_clause({SatLiteral(0u, false)});
+        ARIADNE_TESTING_EXPECT_EQUAL(negative.solve().model(), make_binary_word("0"));
 
-        positive.add_clause({SatLiteral(0u,false)});
+        positive.add_clause({SatLiteral(0u, false)});
         ARIADNE_TESTING_PROVE(positive.solve().is_unsat());
     }
 
     void test_model_and_incrementality() {
         SatSolver solver(3u);
-        solver.add_clause({SatLiteral(0u),SatLiteral(1u)});
-        solver.add_clause({SatLiteral(0u,false),SatLiteral(1u)});
-        ARIADNE_TESTING_EXPECT_EQUAL(solver.clause_count(),2u);
+        solver.add_clause({SatLiteral(0u), SatLiteral(1u)});
+        solver.add_clause({SatLiteral(0u, false), SatLiteral(1u)});
+        ARIADNE_TESTING_EXPECT_EQUAL(solver.clause_count(), 2u);
         ARIADNE_TESTING_PROVE(solver.solve().is_sat());
-        ARIADNE_TESTING_EXPECT_EQUAL(solver.solve().model(),make_binary_word("010"));
+        ARIADNE_TESTING_EXPECT_EQUAL(solver.solve().model(), make_binary_word("010"));
 
         // A tautology changes the clause count, not satisfiability.
-        solver.add_clause({SatLiteral(2u),SatLiteral(2u,false)});
+        solver.add_clause({SatLiteral(2u), SatLiteral(2u, false)});
         ARIADNE_TESTING_PROVE(solver.solve().is_sat());
 
-        solver.add_clause({SatLiteral(1u,false)});
+        solver.add_clause({SatLiteral(1u, false)});
         ARIADNE_TESTING_PROVE(solver.solve().is_unsat());
         ARIADNE_TESTING_PROVE(solver.solve().is_unsat());
     }
 
     void test_invalid_literal_is_atomic() {
         SatSolver solver(2u);
-        ARIADNE_TESTING_EXPECT_EXCEPTION(solver.add_clause({SatLiteral(0u),SatLiteral(2u)}));
-        ARIADNE_TESTING_EXPECT_EQUAL(solver.clause_count(),0u);
+        ARIADNE_TESTING_EXPECT_EXCEPTION(solver.add_clause({SatLiteral(0u), SatLiteral(2u)}));
+        ARIADNE_TESTING_EXPECT_EQUAL(solver.clause_count(), 0u);
         ARIADNE_TESTING_PROVE(solver.solve().is_sat());
-        ARIADNE_TESTING_EXPECT_EQUAL(solver.solve().model(),make_binary_word("00"));
+        ARIADNE_TESTING_EXPECT_EQUAL(solver.solve().model(), make_binary_word("00"));
     }
 
     void test_deterministic_crosscheck() {
         // Small exhaustive truth-table oracle against many generated CNFs.
-        for(SizeType seed=0u; seed!=128u; ++seed) {
+        for (SizeType seed = 0u; seed != 128u; ++seed) {
             SatSolver solver(3u);
             std::vector<SatClause> clauses;
-            for(SizeType j=0u; j!=6u; ++j) {
-                SizeType code=(seed*11u+j*19u+7u)%27u;
+            for (SizeType j = 0u; j != 6u; ++j) {
+                SizeType code = (seed * 11u + j * 19u + 7u) % 27u;
                 SatClause clause;
-                for(SizeType v=0u; v!=3u; ++v) {
-                    SizeType digit=code%3u;
-                    code/=3u;
-                    if(digit==1u) clause.emplace_back(v,true);
-                    if(digit==2u) clause.emplace_back(v,false);
+                for (SizeType v = 0u; v != 3u; ++v) {
+                    SizeType digit = code % 3u;
+                    code /= 3u;
+                    if (digit == 1u)
+                        clause.emplace_back(v, true);
+                    if (digit == 2u)
+                        clause.emplace_back(v, false);
                 }
                 solver.add_clause(clause);
                 clauses.push_back(std::move(clause));
             }
 
-            Bool expected=false;
-            for(SizeType bits=0u; bits!=8u; ++bits) {
+            Bool expected = false;
+            for (SizeType bits = 0u; bits != 8u; ++bits) {
                 BinaryWord model;
-                for(SizeType v=0u; v!=3u; ++v) {
-                    model.append(((bits>>v)&1u)!=0u);
+                for (SizeType v = 0u; v != 3u; ++v) {
+                    model.append(((bits >> v) & 1u) != 0u);
                 }
-                expected = expected or satisfies(clauses,model);
+                expected = expected or satisfies(clauses, model);
             }
 
-            SatResult sat_result=solver.solve();
-            ARIADNE_TESTING_PROVE(sat_result.is_sat()==expected);
-            if(sat_result.is_sat()) {
-                ARIADNE_TESTING_EXPECT_EQUAL(sat_result.model().size(),3u);
-                ARIADNE_TESTING_PROVE(satisfies(clauses,sat_result.model()));
+            SatResult sat_result = solver.solve();
+            ARIADNE_TESTING_PROVE(sat_result.is_sat() == expected);
+            if (sat_result.is_sat()) {
+                ARIADNE_TESTING_EXPECT_EQUAL(sat_result.model().size(), 3u);
+                ARIADNE_TESTING_PROVE(satisfies(clauses, sat_result.model()));
             }
         }
     }
 
     void test_default_cdcl_and_explicit_bdd() {
         SatSolver current(2u);
-        ARIADNE_TESTING_PROVE(current.backend_kind()==SatBackendKind::CDCL);
+        ARIADNE_TESTING_PROVE(current.backend_kind() == SatBackendKind::CDCL);
         ARIADNE_TESTING_EXPECT_EXCEPTION(current.bdd_node_count());
-        current.add_clause({SatLiteral(0u),SatLiteral(1u)});
+        current.add_clause({SatLiteral(0u), SatLiteral(1u)});
         ARIADNE_TESTING_PROVE(current.solve().is_sat());
-        ARIADNE_TESTING_EXPECT_EQUAL(current.solve().model(),make_binary_word("01"));
-        current.add_clause({SatLiteral(0u,false)});
-        current.add_clause({SatLiteral(1u,false)});
+        ARIADNE_TESTING_EXPECT_EQUAL(current.solve().model(), make_binary_word("01"));
+        current.add_clause({SatLiteral(0u, false)});
+        current.add_clause({SatLiteral(1u, false)});
         ARIADNE_TESTING_PROVE(current.solve().is_unsat());
 
-        SatSolver legacy(2u,SatBackendKind::BDD);
-        ARIADNE_TESTING_PROVE(legacy.backend_kind()==SatBackendKind::BDD);
-        legacy.add_clause({SatLiteral(0u),SatLiteral(1u)});
+        SatSolver legacy(2u, SatBackendKind::BDD);
+        ARIADNE_TESTING_PROVE(legacy.backend_kind() == SatBackendKind::BDD);
+        legacy.add_clause({SatLiteral(0u), SatLiteral(1u)});
         ARIADNE_TESTING_PROVE(legacy.solve().is_sat());
-        ARIADNE_TESTING_PROVE(legacy.bdd_node_count()>0u);
-        legacy.add_clause({SatLiteral(0u,false)});
-        legacy.add_clause({SatLiteral(1u,false)});
+        ARIADNE_TESTING_PROVE(legacy.bdd_node_count() > 0u);
+        legacy.add_clause({SatLiteral(0u, false)});
+        legacy.add_clause({SatLiteral(1u, false)});
         ARIADNE_TESTING_PROVE(legacy.solve().is_unsat());
     }
 
@@ -168,95 +171,98 @@ class TestSatSolver : public Ariadne::Testing::ContextFixture {
         // Explicitly reject invalid enum values; also covers the default
         // branch required by -Wswitch-default under warnings-as-errors.
         ARIADNE_TESTING_EXPECT_EXCEPTION(
-            SatSolver(1u,static_cast<SatBackendKind>(99))
-        );
+            SatSolver(1u, static_cast<SatBackendKind>(99)));
     }
 
     void test_move_preserves_incremental_state() {
-        for(SatBackendKind backend:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
+        for (SatBackendKind backend: {SatBackendKind::BDD, SatBackendKind::CDCL}) {
             ARIADNE_TESTING_NOTE("Move construction and assignment for "
-                << (backend==SatBackendKind::BDD ? "BDD" : "CDCL"));
-            SatSolver source(3u,backend);
+                                 << (backend == SatBackendKind::BDD ? "BDD" : "CDCL"));
+            SatSolver source(3u, backend);
             source.add_clause({SatLiteral(0u)});
-            source.add_clause({SatLiteral(1u,false)});
-            SatResult before_move=source.solve();
-            ARIADNE_TESTING_EXPECT_EQUAL(before_move.model(),make_binary_word("100"));
+            source.add_clause({SatLiteral(1u, false)});
+            SatResult before_move = source.solve();
+            ARIADNE_TESTING_EXPECT_EQUAL(before_move.model(), make_binary_word("100"));
 
             SatSolver moved(std::move(source));
-            ARIADNE_TESTING_EXPECT_EQUAL(moved.variable_count(),3u);
-            ARIADNE_TESTING_EXPECT_EQUAL(moved.clause_count(),2u);
-            ARIADNE_TESTING_PROVE(moved.backend_kind()==backend);
-            ARIADNE_TESTING_EXPECT_EQUAL(moved.solve().model(),before_move.model());
+            ARIADNE_TESTING_EXPECT_EQUAL(moved.variable_count(), 3u);
+            ARIADNE_TESTING_EXPECT_EQUAL(moved.clause_count(), 2u);
+            ARIADNE_TESTING_PROVE(moved.backend_kind() == backend);
+            ARIADNE_TESTING_EXPECT_EQUAL(moved.solve().model(), before_move.model());
             moved.add_clause({SatLiteral(2u)});
-            ARIADNE_TESTING_EXPECT_EQUAL(moved.solve().model(),make_binary_word("101"));
+            ARIADNE_TESTING_EXPECT_EQUAL(moved.solve().model(), make_binary_word("101"));
 
             // Assignment replaces an already populated backend of the other
             // kind and transfers the accumulated clauses and metadata.
-            SatBackendKind other=backend==SatBackendKind::BDD
-                ? SatBackendKind::CDCL : SatBackendKind::BDD;
-            SatSolver target(1u,other);
+            SatBackendKind other = backend == SatBackendKind::BDD
+                                     ? SatBackendKind::CDCL
+                                     : SatBackendKind::BDD;
+            SatSolver target(1u, other);
             target.add_clause({});
             ARIADNE_TESTING_PROVE(target.solve().is_unsat());
-            target=std::move(moved);
-            ARIADNE_TESTING_EXPECT_EQUAL(target.variable_count(),3u);
-            ARIADNE_TESTING_EXPECT_EQUAL(target.clause_count(),3u);
-            ARIADNE_TESTING_PROVE(target.backend_kind()==backend);
-            ARIADNE_TESTING_EXPECT_EQUAL(target.solve().model(),make_binary_word("101"));
-            target.add_clause({SatLiteral(0u,false)});
-            ARIADNE_TESTING_EXPECT_EQUAL(target.clause_count(),4u);
+            target = std::move(moved);
+            ARIADNE_TESTING_EXPECT_EQUAL(target.variable_count(), 3u);
+            ARIADNE_TESTING_EXPECT_EQUAL(target.clause_count(), 3u);
+            ARIADNE_TESTING_PROVE(target.backend_kind() == backend);
+            ARIADNE_TESTING_EXPECT_EQUAL(target.solve().model(), make_binary_word("101"));
+            target.add_clause({SatLiteral(0u, false)});
+            ARIADNE_TESTING_EXPECT_EQUAL(target.clause_count(), 4u);
             ARIADNE_TESTING_PROVE(target.solve().is_unsat());
-            ARIADNE_TESTING_EXPECT_EQUAL(before_move.model(),make_binary_word("100"));
+            ARIADNE_TESTING_EXPECT_EQUAL(before_move.model(), make_binary_word("100"));
         }
     }
 
     void test_cross_backend() {
-        for(SatBackendKind backend:{SatBackendKind::BDD,SatBackendKind::CDCL}) {
-            SatSolver solver(3u,backend);
-            ARIADNE_TESTING_PROVE(solver.backend_kind()==backend);
-            solver.add_clause({SatLiteral(0u),SatLiteral(1u)});
-            solver.add_clause({SatLiteral(0u,false),SatLiteral(1u)});
+        for (SatBackendKind backend: {SatBackendKind::BDD, SatBackendKind::CDCL}) {
+            SatSolver solver(3u, backend);
+            ARIADNE_TESTING_PROVE(solver.backend_kind() == backend);
+            solver.add_clause({SatLiteral(0u), SatLiteral(1u)});
+            solver.add_clause({SatLiteral(0u, false), SatLiteral(1u)});
             ARIADNE_TESTING_PROVE(solver.solve().is_sat());
             ARIADNE_TESTING_PROVE(solver.solve().is_sat());
             ARIADNE_TESTING_PROVE(satisfies(
-                {SatClause{SatLiteral(0u),SatLiteral(1u)},
-                 SatClause{SatLiteral(0u,false),SatLiteral(1u)}},
+                {
+                    SatClause{SatLiteral(0u), SatLiteral(1u)},
+                    SatClause{SatLiteral(0u, false), SatLiteral(1u)}
+            },
                 solver.solve().model()));
-            solver.add_clause({SatLiteral(1u,false)});
+            solver.add_clause({SatLiteral(1u, false)});
             ARIADNE_TESTING_PROVE(solver.solve().is_unsat());
             ARIADNE_TESTING_PROVE(solver.solve().is_unsat());
-            if(backend==SatBackendKind::CDCL) {
+            if (backend == SatBackendKind::CDCL) {
                 ARIADNE_TESTING_EXPECT_EXCEPTION(solver.bdd_node_count());
             }
         }
-        for(SizeType seed=0u;seed!=128u;++seed) {
-            SatSolver bdd(3u,SatBackendKind::BDD);
-            SatSolver cdcl(3u,SatBackendKind::CDCL);
+        for (SizeType seed = 0u; seed != 128u; ++seed) {
+            SatSolver bdd(3u, SatBackendKind::BDD);
+            SatSolver cdcl(3u, SatBackendKind::CDCL);
             std::vector<SatClause> clauses;
-            for(SizeType j=0u;j!=6u;++j) {
-                SizeType code=(seed*11u+j*19u+7u)%27u;
+            for (SizeType j = 0u; j != 6u; ++j) {
+                SizeType code = (seed * 11u + j * 19u + 7u) % 27u;
                 SatClause clause;
-                for(SizeType v=0u;v!=3u;++v) {
-                    SizeType digit=code%3u;
-                    code/=3u;
-                    if(digit==1u) clause.emplace_back(v,true);
-                    if(digit==2u) clause.emplace_back(v,false);
+                for (SizeType v = 0u; v != 3u; ++v) {
+                    SizeType digit = code % 3u;
+                    code /= 3u;
+                    if (digit == 1u)
+                        clause.emplace_back(v, true);
+                    if (digit == 2u)
+                        clause.emplace_back(v, false);
                 }
                 bdd.add_clause(clause);
                 cdcl.add_clause(clause);
                 clauses.push_back(std::move(clause));
             }
-            SatResult lhs=bdd.solve();
-            SatResult rhs=cdcl.solve();
-            ARIADNE_TESTING_PROVE(lhs.is_sat()==rhs.is_sat());
-            if(lhs.is_sat()) {
-                ARIADNE_TESTING_EXPECT_EQUAL(lhs.model().size(),3u);
-                ARIADNE_TESTING_EXPECT_EQUAL(rhs.model().size(),3u);
-                ARIADNE_TESTING_PROVE(satisfies(clauses,lhs.model()));
-                ARIADNE_TESTING_PROVE(satisfies(clauses,rhs.model()));
+            SatResult lhs = bdd.solve();
+            SatResult rhs = cdcl.solve();
+            ARIADNE_TESTING_PROVE(lhs.is_sat() == rhs.is_sat());
+            if (lhs.is_sat()) {
+                ARIADNE_TESTING_EXPECT_EQUAL(lhs.model().size(), 3u);
+                ARIADNE_TESTING_EXPECT_EQUAL(rhs.model().size(), 3u);
+                ARIADNE_TESTING_PROVE(satisfies(clauses, lhs.model()));
+                ARIADNE_TESTING_PROVE(satisfies(clauses, rhs.model()));
             }
         }
     }
-
 };
 
 } // namespace

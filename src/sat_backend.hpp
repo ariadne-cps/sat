@@ -41,7 +41,7 @@ class SatBackend {
     /** @brief Destroy a concrete SAT backend. */
     virtual ~SatBackend() = default;
     /** @brief Append a CNF clause to the backend. */
-    virtual Void add_clause(SatClause const& clause) = 0;
+    virtual Void add_clause(const SatClause& clause) = 0;
     /** @brief Solve the current formula and write a model when satisfiable. */
     virtual Bool solve(BinaryWord& model) = 0;
     /** @brief Return the BDD node count, when supported by the backend. */
@@ -50,7 +50,7 @@ class SatBackend {
 
 /** @brief Construct a backend of the requested type for a given number of variables. */
 std::unique_ptr<SatBackend> make_sat_backend(
-    SizeType variable_count,SatBackendKind kind);
+    SizeType variable_count, SatBackendKind kind);
 
 } // namespace Ariadne
 

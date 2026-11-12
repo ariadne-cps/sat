@@ -29,9 +29,9 @@
 #ifndef ARIADNE_SAT_HPP
 #define ARIADNE_SAT_HPP
 
-#include "ariadne-cdcl.hpp"
-
 #include "sat/sat_solver.hpp"
+
 #include "ariadne-bdd.hpp"
+#include "ariadne-cdcl.hpp"
 
 #endif // ARIADNE_SAT_HPP

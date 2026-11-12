@@ -26,38 +26,38 @@
  *  \brief Implementation of the Boolean satisfiability solver.
  */
 
+#include "sat/sat_solver.hpp"
+
 #include <stdexcept>
 #include <utility>
 
-#include "sat/sat_solver.hpp"
 #include "sat_backend.hpp"
 
 namespace Ariadne {
 
 SatResult::SatResult(Bool satisfiable, BinaryWord model)
-    : _satisfiable(satisfiable), _model(std::move(model)) { }
+    : _satisfiable(satisfiable), _model(std::move(model)) {}
 
-BinaryWord const& SatResult::model() const {
-    if(not _satisfiable) {
+const BinaryWord& SatResult::model() const {
+    if (not _satisfiable) {
         throw std::logic_error("UNSAT results have no model");
     }
     return _model;
 }
 
-SatSolver::SatSolver(SizeType variable_count,SatBackendKind backend)
+SatSolver::SatSolver(SizeType variable_count, SatBackendKind backend)
     : _variable_count(variable_count),
       _backend_kind(backend),
-      _backend(make_sat_backend(variable_count,backend)) { }
+      _backend(make_sat_backend(variable_count, backend)) {}
 
 SatSolver::~SatSolver() = default;
 SatSolver::SatSolver(SatSolver&&) noexcept = default;
 SatSolver& SatSolver::operator=(SatSolver&&) noexcept = default;
 
-Void SatSolver::add_clause(SatClause const& clause)
-{
+Void SatSolver::add_clause(const SatClause& clause) {
     // Validate all literals before mutating the selected backend.
-    for(SatLiteral const& literal:clause) {
-        if(literal.variable()>=_variable_count) {
+    for (const SatLiteral& literal: clause) {
+        if (literal.variable() >= _variable_count) {
             throw std::out_of_range("SAT literal variable exceeds declared variable count");
         }
     }
@@ -65,16 +65,14 @@ Void SatSolver::add_clause(SatClause const& clause)
     ++_clause_count;
 }
 
-SatResult SatSolver::solve()
-{
+SatResult SatSolver::solve() {
     BinaryWord model;
-    Bool satisfiable=_backend->solve(model);
-    return SatResult(satisfiable,std::move(model));
+    Bool satisfiable = _backend->solve(model);
+    return SatResult(satisfiable, std::move(model));
 }
 
-SizeType SatSolver::bdd_node_count() const
-{
-    if(_backend_kind!=SatBackendKind::BDD) {
+SizeType SatSolver::bdd_node_count() const {
+    if (_backend_kind != SatBackendKind::BDD) {
         throw std::logic_error("BDD node count only available for BDD SAT backend");
     }
     return _backend->bdd_node_count();

@@ -31,106 +31,104 @@
 #include <utility>
 #include <vector>
 
+#include "sat_benchmarking_common.hpp"
 #include "threading/thread_manager.hpp"
 #include "threading/threading_command_line_interface.hpp"
-#include "sat_benchmarking_common.hpp"
 
 using namespace Ariadne;
-namespace Bench=Ariadne::Benchmarking;
+namespace Bench = Ariadne::Benchmarking;
 
 namespace {
 struct Selection {
-    unsigned min_holes=1u;
-    unsigned max_holes=3u;
-    unsigned samples=5u;
-    SatBenchmark::BackendSelection backend=SatBenchmark::BackendSelection::BOTH;
+    unsigned min_holes = 1u;
+    unsigned max_holes = 3u;
+    unsigned samples = 5u;
+    SatBenchmark::BackendSelection backend = SatBenchmark::BackendSelection::BOTH;
 };
 
 List<ArgumentParser> benchmark_parsers(Selection& s) {
     List<ArgumentParser> parsers;
 
     parsers.append(make_valued_argument_parser(
-        "m","min-holes","Minimum positive hole count (default: 1)",
-        [&s](String const& text)->VoidFunction {
-            unsigned const value=Bench::parse_unsigned<unsigned>(text);
-            if(value==0u) throw std::invalid_argument("min-holes must be positive");
-            return [&s,value] { s.min_holes=value; };
+        "m", "min-holes", "Minimum positive hole count (default: 1)",
+        [&s](const String& text) -> VoidFunction {
+            const unsigned value = Bench::parse_unsigned<unsigned>(text);
+            if (value == 0u)
+                throw std::invalid_argument("min-holes must be positive");
+            return [&s, value] { s.min_holes = value; };
         }));
     parsers.append(make_valued_argument_parser(
-        "M","max-holes","Maximum hole count (default: 3)",
-        [&s](String const& text)->VoidFunction {
-            unsigned const value=Bench::parse_unsigned<unsigned>(text);
-            if(value==0u || value==std::numeric_limits<unsigned>::max())
+        "M", "max-holes", "Maximum hole count (default: 3)",
+        [&s](const String& text) -> VoidFunction {
+            const unsigned value = Bench::parse_unsigned<unsigned>(text);
+            if (value == 0u || value == std::numeric_limits<unsigned>::max())
                 throw std::invalid_argument("max-holes outside supported range");
-            return [&s,value] { s.max_holes=value; };
+            return [&s, value] { s.max_holes = value; };
         }));
 
     parsers.append(make_valued_argument_parser(
-        "n","samples","Odd sample count between 3 and 101 (default: 5)",
-        [&s](String const& text)->VoidFunction {
-            unsigned const value=SatBenchmark::odd_sample_count(text);
-            return [&s,value] { s.samples=value; };
+        "n", "samples", "Odd sample count between 3 and 101 (default: 5)",
+        [&s](const String& text) -> VoidFunction {
+            const unsigned value = SatBenchmark::odd_sample_count(text);
+            return [&s, value] { s.samples = value; };
         }));
-    for(auto const& parser:SatBenchmark::backend_parser(s.backend))
+    for (const auto& parser: SatBenchmark::backend_parser(s.backend))
         parsers.append(parser);
     return parsers;
 }
 
-SizeType index(SizeType holes,SizeType pigeon,SizeType hole)
-{
-    return pigeon*holes+hole;
+SizeType index(SizeType holes, SizeType pigeon, SizeType hole) {
+    return pigeon * holes + hole;
 }
 
 // Generate once per case. The vector is shared by both backends and is never
 // included in the timed region.
-std::vector<SatClause> make_problem(SizeType pigeons,SizeType holes)
-{
-    if(holes==0u or pigeons==0u or
-       holes>std::numeric_limits<SizeType>::max()/pigeons) {
+std::vector<SatClause> make_problem(SizeType pigeons, SizeType holes) {
+    if (holes == 0u or pigeons == 0u or
+        holes > std::numeric_limits<SizeType>::max() / pigeons) {
         throw std::out_of_range("pigeonhole variable count overflow");
     }
     std::vector<SatClause> clauses;
-    for(SizeType pigeon=0u;pigeon<pigeons;++pigeon) {
+    for (SizeType pigeon = 0u; pigeon < pigeons; ++pigeon) {
         SatClause at_least_one;
-        for(SizeType hole=0u;hole<holes;++hole) {
-            at_least_one.emplace_back(index(holes,pigeon,hole));
-            for(SizeType other=hole+1u;other<holes;++other) {
-                clauses.push_back({SatLiteral(index(holes,pigeon,hole),false),
-                                   SatLiteral(index(holes,pigeon,other),false)});
+        for (SizeType hole = 0u; hole < holes; ++hole) {
+            at_least_one.emplace_back(index(holes, pigeon, hole));
+            for (SizeType other = hole + 1u; other < holes; ++other) {
+                clauses.push_back({SatLiteral(index(holes, pigeon, hole), false),
+                                   SatLiteral(index(holes, pigeon, other), false)});
             }
         }
         clauses.push_back(std::move(at_least_one));
     }
-    for(SizeType hole=0u;hole<holes;++hole) {
-        for(SizeType p=0u;p<pigeons;++p) {
-            for(SizeType q=p+1u;q<pigeons;++q) {
-                clauses.push_back({SatLiteral(index(holes,p,hole),false),
-                                   SatLiteral(index(holes,q,hole),false)});
+    for (SizeType hole = 0u; hole < holes; ++hole) {
+        for (SizeType p = 0u; p < pigeons; ++p) {
+            for (SizeType q = p + 1u; q < pigeons; ++q) {
+                clauses.push_back({SatLiteral(index(holes, p, hole), false),
+                                   SatLiteral(index(holes, q, hole), false)});
             }
         }
     }
     return clauses;
 }
 
-Bool satisfies(std::vector<SatClause> const& clauses,BinaryWord const& model)
-{
-    for(SatClause const& clause:clauses) {
-        Bool valid=false;
-        for(SatLiteral const& literal:clause) {
-            if(model[literal.variable()]==literal.positive()) {
-                valid=true;
+Bool satisfies(const std::vector<SatClause>& clauses, const BinaryWord& model) {
+    for (const SatClause& clause: clauses) {
+        Bool valid = false;
+        for (const SatLiteral& literal: clause) {
+            if (model[literal.variable()] == literal.positive()) {
+                valid = true;
                 break;
             }
         }
-        if(not valid) return false;
+        if (not valid)
+            return false;
     }
     return true;
 }
 
-
 } // namespace
 
-int main(int argc,char const* argv[]) {
+int main(int argc, const char* argv[]) {
     try {
         Selection selection;
         Bench::CommandLine cli;
@@ -139,49 +137,50 @@ int main(int argc,char const* argv[]) {
         cli.add(CommandLineContribution(
             "sat-pigeonhole-benchmark",
             benchmark_parsers(selection)));
-        if(not cli.acquire(Bench::arguments(argc,argv))) return 0;
+        if (not cli.acquire(Bench::arguments(argc, argv)))
+            return 0;
 
-        if(selection.min_holes>selection.max_holes)
+        if (selection.min_holes > selection.max_holes)
             throw std::invalid_argument("min-holes must not exceed max-holes");
 
-        Bench::Runner runner(cli,2u*(selection.max_holes-selection.min_holes+1u));
-        Bench::Report report("SAT Pigeonhole BDD/CDCL (nanoseconds)",cli.summary_fields());
+        Bench::Runner runner(cli, 2u * (selection.max_holes - selection.min_holes + 1u));
+        Bench::Report report("SAT Pigeonhole BDD/CDCL (nanoseconds)", cli.summary_fields());
         report.set_dimension_columns({
-            {"Holes",0u,Bench::TableAlignment::Right},
-            {"Pigeons",0u,Bench::TableAlignment::Right},
-            {"Result"},{"Clauses",0u,Bench::TableAlignment::Right},
-            {"Backend"},{"BDD nodes",0u,Bench::TableAlignment::Right},
+            {"Holes", 0u, Bench::TableAlignment::Right},
+            {"Pigeons", 0u, Bench::TableAlignment::Right},
+            {"Result"},
+            {"Clauses", 0u, Bench::TableAlignment::Right},
+            {"Backend"},
+            {"BDD nodes", 0u, Bench::TableAlignment::Right},
             {"Phase"}
         });
         report.set_table_options(Bench::TableOptions::ruled());
         report.set_parameter_header(
             "CNF generated outside timing; build=solver creation + clause insertion; "
             "solve=SAT/UNSAT search; total=build + solve. Warm-ups excluded.");
-        for(SizeType holes=selection.min_holes;holes<=selection.max_holes;++holes) {
-            for(SizeType pigeons:{holes,holes+1u}) {
-                SizeType const variables=pigeons*holes;
-                std::vector<SatClause> const clauses=make_problem(pigeons,holes);
-                Bool const expected_sat=pigeons<=holes;
-                SatBenchmark::Comparison const results=SatBenchmark::run_comparison(
-                    runner,"pigeonhole/"+std::to_string(holes)+"/"+std::to_string(pigeons),
-                    selection.samples,variables,clauses,expected_sat,
-                    selection.backend,[&](BinaryWord const& model) {
-                        return satisfies(clauses,model);
+        for (SizeType holes = selection.min_holes; holes <= selection.max_holes; ++holes) {
+            for (SizeType pigeons: {holes, holes + 1u}) {
+                const SizeType variables = pigeons * holes;
+                const std::vector<SatClause> clauses = make_problem(pigeons, holes);
+                const Bool expected_sat = pigeons <= holes;
+                const SatBenchmark::Comparison results = SatBenchmark::run_comparison(
+                    runner, "pigeonhole/" + std::to_string(holes) + "/" + std::to_string(pigeons),
+                    selection.samples, variables, clauses, expected_sat,
+                    selection.backend, [&](const BinaryWord& model) {
+                        return satisfies(clauses, model);
                     });
-                SatBenchmark::add_rows(report,{
-                    std::to_string(holes),std::to_string(pigeons),
-                    expected_sat?"SAT":"UNSAT",std::to_string(clauses.size())},results);
-                if(auto ratio=SatBenchmark::bdd_cdcl_total_ratio(results))
-                    LOGGING_PRINTLN("Pigeonhole holes="<<holes<<" pigeons="<<pigeons
-                                   <<" BDD/CDCL median total ratio: "
-                                   <<Bench::Table::number(*ratio)<<"x")
+                SatBenchmark::add_rows(report, {std::to_string(holes), std::to_string(pigeons), expected_sat ? "SAT" : "UNSAT", std::to_string(clauses.size())}, results);
+                if (auto ratio = SatBenchmark::bdd_cdcl_total_ratio(results))
+                    LOGGING_PRINTLN("Pigeonhole holes=" << holes << " pigeons=" << pigeons
+                                                        << " BDD/CDCL median total ratio: "
+                                                        << Bench::Table::number(*ratio) << "x")
             }
         }
         report.print();
 
         return 0;
-    } catch(std::exception const& error) {
-        LOGGING_PRINTLN("Pigeonhole benchmark: "<<error.what())
+    } catch (const std::exception& error) {
+        LOGGING_PRINTLN("Pigeonhole benchmark: " << error.what())
         return 1;
     }
 }
