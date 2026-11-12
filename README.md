@@ -1,5 +1,6 @@
 # Ariadne SAT
 
+[![Format Status](https://github.com/ariadne-cps/sat/actions/workflows/format.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/format.yml)
 [![macOS Status](https://github.com/ariadne-cps/sat/actions/workflows/macos.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/macos.yml)
 [![Ubuntu Status](https://github.com/ariadne-cps/sat/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/ubuntu.yml)
 [![Windows](https://github.com/ariadne-cps/sat/actions/workflows/win.yml/badge.svg)](https://github.com/ariadne-cps/sat/actions/workflows/win.yml)
