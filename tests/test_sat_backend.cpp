@@ -28,6 +28,7 @@
 
 #include <stdexcept>
 
+#include "logging/test_runner.hpp"
 #include "sat_backend.hpp"
 
 #include "ariadne-testing.hpp"
@@ -77,5 +78,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_SUITE("test_sat_backend");
     ARIADNE_TESTING_ADD_TEST(TestSatBackend, test_backend_diagnostics);
     ARIADNE_TESTING_ADD_TEST(TestSatBackend, test_zero_variable_backend_results);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }

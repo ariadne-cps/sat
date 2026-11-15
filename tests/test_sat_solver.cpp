@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include "logging/test_runner.hpp"
 #include "sat/sat_solver.hpp"
 
 #include "ariadne-testing.hpp"
@@ -277,5 +278,5 @@ int main(int argc, char** argv) {
     ARIADNE_TESTING_ADD_TEST(TestSatSolver, test_model_and_incrementality);
     ARIADNE_TESTING_ADD_TEST(TestSatSolver, test_invalid_literal_is_atomic);
     ARIADNE_TESTING_ADD_TEST(TestSatSolver, test_deterministic_crosscheck);
-    return ARIADNE_TESTING_RUN_TESTS_WITH_ARGS(argc, argv);
+    return Ariadne::Testing::run_logging_suite(ariadne_test_suite, argc, argv);
 }
